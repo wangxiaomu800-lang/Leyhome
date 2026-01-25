@@ -1,7 +1,7 @@
 # Day 2 开发提示词
 
 ## 今日目标
-**用户系统完整实现 + 数据层架构**
+**用户系统完整实现 + 数据层架构（Apple ID + Google 登录）**
 
 请阅读 `/Users/xiaomu/Desktop/Leyhome/GDD.md` 和 `/Users/xiaomu/Desktop/Leyhome/PRD.md`，然后完成以下任务。
 
@@ -9,7 +9,7 @@
 
 ## 任务清单
 
-### 1. Apple ID 登录实现
+### 1. Apple ID 登录实现 + Google 登录实现
 
 **配置 Sign in with Apple 能力**：
 1. 在 Xcode 中添加 "Sign in with Apple" Capability
@@ -386,6 +386,7 @@ struct SettingsView: View {
 
 ## 验收标准
 - [ ] Apple ID 登录流程完整可用
+- [ ] Google 登录流程完整可用
 - [ ] 登录后进入主界面，用户信息正确保存
 - [ ] 个人中心页面显示用户基本信息
 - [ ] 设置页面可切换中英文语言
