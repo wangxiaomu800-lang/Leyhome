@@ -1,24 +1,33 @@
 //
 //  ContentView.swift
-//  Leyhome
+//  Leyhome - 地脉归途
 //
-//  Created by 王璇 on 2026/1/25.
+//  主内容视图 - 处理登录状态和主界面切换
+//
+//  Created on 2026/01/26.
 //
 
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var authManager: AuthManager
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        Group {
+            if authManager.isAuthenticated {
+                MainTabView()
+            } else {
+                LoginView()
+            }
         }
-        .padding()
+        .animation(.easeInOut(duration: LeyhomeTheme.Animation.normal), value: authManager.isAuthenticated)
     }
 }
 
-#Preview {
+#Preview("Logged Out") {
     ContentView()
+}
+
+#Preview("Logged In") {
+    MainTabView()
 }

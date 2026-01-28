@@ -74,6 +74,7 @@ Leyhome/
 // 登录
 "login.welcome" = "欢迎回家" / "Welcome Home"
 "login.apple" = "使用 Apple 登录" / "Sign in with Apple"
+"login.google" = "使用 Google 登录" / "Sign in with Google"
 ```
 
 **创建 `LocalizationManager.swift`**：

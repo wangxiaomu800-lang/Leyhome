@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地脉归途 (Leyhome)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif SC', serif;
+            margin: 0;
+            padding: 0;
+            background-color: #F5F0E6;
+            overflow-x: hidden;
+        }
+        .font-poetic {
+            font-family: 'Playfair Display', serif;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.5); opacity: 0.1; }
+        }
+        .animate-breathe {
+            animation: breathe 4s ease-in-out infinite;
+        }
+        /* Custom scrollbar for minimalist look */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(212, 165, 116, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

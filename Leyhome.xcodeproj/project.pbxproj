@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F97497D52F28F70000855190 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F97497D42F28F70000855190 /* GoogleSignIn */; };
+		F97497D72F28F70000855190 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F97497D62F28F70000855190 /* GoogleSignInSwift */; };
+		F9BE9E032F278A5C0004F1B0 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F9BE9E022F278A5C0004F1B0 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		F9F951B62F2635EB0082A04D /* Leyhome.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Leyhome.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +29,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F97497D72F28F70000855190 /* GoogleSignInSwift in Frameworks */,
+				F9BE9E032F278A5C0004F1B0 /* Supabase in Frameworks */,
+				F97497D52F28F70000855190 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +74,9 @@
 			);
 			name = Leyhome;
 			packageProductDependencies = (
+				F9BE9E022F278A5C0004F1B0 /* Supabase */,
+				F97497D42F28F70000855190 /* GoogleSignIn */,
+				F97497D62F28F70000855190 /* GoogleSignInSwift */,
 			);
 			productName = Leyhome;
 			productReference = F9F951B62F2635EB0082A04D /* Leyhome.app */;
@@ -94,6 +106,10 @@
 			);
 			mainGroup = F9F951AD2F2635EB0082A04D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F9BE9E012F278A5C0004F1B0 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				F97497D32F28F70000855190 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F9F951B72F2635EB0082A04D /* Products */;
 			projectDirPath = "";
@@ -256,6 +272,7 @@
 				DEVELOPMENT_TEAM = TJ882MBQ4J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "地脉归途需要访问您的位置来记录行走轨迹，绘制专属于您的心灵地图。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -289,6 +306,7 @@
 				DEVELOPMENT_TEAM = TJ882MBQ4J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "地脉归途需要访问您的位置来记录行走轨迹，绘制专属于您的心灵地图。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -334,6 +352,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F97497D32F28F70000855190 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+		F9BE9E012F278A5C0004F1B0 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F97497D42F28F70000855190 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F97497D32F28F70000855190 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		F97497D62F28F70000855190 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F97497D32F28F70000855190 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		F9BE9E022F278A5C0004F1B0 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F9BE9E012F278A5C0004F1B0 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F9F951AE2F2635EB0082A04D /* Project object */;
 }
