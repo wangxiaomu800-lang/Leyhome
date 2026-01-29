@@ -6,6 +6,7 @@
 //
 //  Created on 2026/01/26.
 //  Refactored on 2026/01/28: Full GPS tracking integration
+//  Updated on 2026/01/29: 历史轨迹、能量线、地图主题
 //
 
 import SwiftUI
@@ -15,6 +16,10 @@ import SwiftData
 struct MapView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var trackingManager = TrackingManager.shared
+    @StateObject private var themeManager = ThemeManager.shared
+
+    /// 从 SwiftData 查询所有已保存的旅程（按开始时间降序）
+    @Query(sort: \Journey.startTime, order: .reverse) private var journeys: [Journey]
 
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 39.9042, longitude: 116.4074), // 默认北京
@@ -22,6 +27,7 @@ struct MapView: View {
     )
     @State private var showStopConfirmation = false
     @State private var showPermissionAlert = false
+    @State private var showThemePicker = false
 
     var body: some View {
         NavigationStack {
@@ -29,7 +35,9 @@ struct MapView: View {
                 // 地图背景（使用 UIKit MapView）
                 MapViewRepresentable(
                     trackingManager: trackingManager,
-                    region: $region
+                    region: $region,
+                    journeys: journeys,
+                    mapTheme: themeManager.currentTheme
                 )
                 .ignoresSafeArea()
 
@@ -62,6 +70,27 @@ struct MapView: View {
                     .transition(.opacity)
                 }
 
+                // 主题切换按钮（右上角）
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button {
+                            showThemePicker = true
+                        } label: {
+                            Image(systemName: themeManager.currentTheme.icon)
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(LeyhomeTheme.primary)
+                                .frame(width: 40, height: 40)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                        }
+                        .padding(.trailing, LeyhomeTheme.Spacing.md)
+                        .padding(.top, LeyhomeTheme.Spacing.xxl)
+                    }
+                    Spacer()
+                }
+
                 // 录制控制按钮
                 RecordingControlView(
                     trackingManager: trackingManager,
@@ -82,6 +111,10 @@ struct MapView: View {
                 Button("好的", role: .cancel) {}
             } message: {
                 Text("地脉归途需要访问您的位置来记录轨迹，请前往设置开启定位权限。")
+            }
+            .sheet(isPresented: $showThemePicker) {
+                ThemePickerView(themeManager: themeManager)
+                    .presentationDetents([.medium])
             }
             .onAppear {
                 checkLocationPermission()
@@ -123,7 +156,6 @@ struct MapView: View {
         case .denied, .restricted:
             showPermissionAlert = true
         case .authorizedWhenInUse, .authorizedAlways:
-            // WhenInUse 权限足够用于前台录制
             break
         @unknown default:
             break
@@ -137,7 +169,6 @@ struct MapView: View {
             return
         }
 
-        // 保存到 SwiftData
         modelContext.insert(journey)
 
         do {
@@ -145,6 +176,69 @@ struct MapView: View {
             print("✅ Journey 保存成功：\(journey.name)")
         } catch {
             print("❌ Journey 保存失败：\(error.localizedDescription)")
+        }
+    }
+}
+
+// MARK: - Theme Picker
+
+/// 地图主题选择器
+struct ThemePickerView: View {
+    @ObservedObject var themeManager: ThemeManager
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(MapTheme.allCases) { theme in
+                    Button {
+                        themeManager.setTheme(theme)
+                        dismiss()
+                    } label: {
+                        HStack(spacing: LeyhomeTheme.Spacing.md) {
+                            Image(systemName: theme.icon)
+                                .font(.system(size: 22))
+                                .foregroundColor(themeManager.currentTheme == theme ? LeyhomeTheme.accent : LeyhomeTheme.textSecondary)
+                                .frame(width: 32)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack {
+                                    Text(theme.localizedName)
+                                        .font(LeyhomeTheme.Fonts.body)
+                                        .foregroundColor(LeyhomeTheme.textPrimary)
+
+                                    if theme.isPremium {
+                                        Text("map.theme.premium".localized)
+                                            .font(LeyhomeTheme.Fonts.caption)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(LeyhomeTheme.accent)
+                                            .cornerRadius(4)
+                                    }
+                                }
+                            }
+
+                            Spacer()
+
+                            if themeManager.currentTheme == theme {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(LeyhomeTheme.primary)
+                            }
+                        }
+                        .padding(.vertical, LeyhomeTheme.Spacing.xs)
+                    }
+                }
+            }
+            .navigationTitle("map.theme".localized)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("关闭") {
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }
