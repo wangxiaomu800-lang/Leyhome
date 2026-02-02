@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "·" : {
+
+    },
     "&" : {
 
     },
@@ -169,6 +172,57 @@
         }
       }
     },
+    "intention.aspire" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I Aspire to Visit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我亦向往"
+          }
+        }
+      }
+    },
+    "intention.confirm_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark this sacred site as a place you aspire to visit?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将这个圣迹标记为你向往的地方？"
+          }
+        }
+      }
+    },
+    "journey.choose_way" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Your Way"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择你的旅途方式"
+          }
+        }
+      }
+    },
     "journey.date" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -237,6 +291,23 @@
         }
       }
     },
+    "journey.distance_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distance"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直线距离"
+          }
+        }
+      }
+    },
     "journey.duration" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -267,6 +338,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "还没有记录\n开始你的第一段旅程吧"
+          }
+        }
+      }
+    },
+    "journey.mood_records" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mood Records"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沿途心绪"
+          }
+        }
+      }
+    },
+    "journey.no_mood_records" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No mood records for this journey"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这段旅程暂无心绪记录"
+          }
+        }
+      }
+    },
+    "journey.planner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Journey Planner"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旅程规划"
+          }
+        }
+      }
+    },
+    "journey.start_nav" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Navigation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始导航"
           }
         }
       }
@@ -620,6 +759,57 @@
         }
       }
     },
+    "mood.history.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No mood records yet\nStart your journey to record moods along the way"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有心绪记录\n开始你的旅程，记录沿途心绪"
+          }
+        }
+      }
+    },
+    "mood.history.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review all your mood records"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回顾所有心绪记录"
+          }
+        }
+      }
+    },
+    "mood.history.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mood History"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "心绪回顾"
+          }
+        }
+      }
+    },
     "mood.inspiration" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -739,6 +929,23 @@
         }
       }
     },
+    "node.add_retroactive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Mood"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "补录心绪"
+          }
+        }
+      }
+    },
     "node.create.add_content" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -769,6 +976,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此刻的心绪是？"
+          }
+        }
+      }
+    },
+    "node.create.multi_select_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can select multiple moods"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可以选择多个心绪"
           }
         }
       }
@@ -939,6 +1163,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "语音笔记"
+          }
+        }
+      }
+    },
+    "node.hint.start_journey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a journey to record mood on map"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始旅程后，可在地图上长按记录心绪"
           }
         }
       }
@@ -1177,6 +1418,176 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "探索世界各地的圣迹"
+          }
+        }
+      }
+    },
+    "sacred.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        }
+      }
+    },
+    "sacred.echoes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echoes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回响"
+          }
+        }
+      }
+    },
+    "sacred.echoes_empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No echoes yet. Be the first to leave one."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有回响，留下你的第一条吧"
+          }
+        }
+      }
+    },
+    "sacred.echoes_section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echoes of This Place"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此地的回响"
+          }
+        }
+      }
+    },
+    "sacred.history" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History & Legends"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史与传说"
+          }
+        }
+      }
+    },
+    "sacred.intentions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aspirations"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "向往"
+          }
+        }
+      }
+    },
+    "sacred.lore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ley Line Interpretation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地脉解读"
+          }
+        }
+      }
+    },
+    "sacred.plan_journey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan Your Pilgrimage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "规划朝圣之旅"
+          }
+        }
+      }
+    },
+    "sacred.search" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search sacred sites"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索圣迹"
+          }
+        }
+      }
+    },
+    "sacred.visitors" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visitors"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "到访"
           }
         }
       }
@@ -1504,142 +1915,6 @@
     },
     "验证码" : {
 
-    },
-    "journey.mood_records" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mood Records"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "沿途心绪"
-          }
-        }
-      }
-    },
-    "journey.no_mood_records" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No mood records for this journey"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这段旅程暂无心绪记录"
-          }
-        }
-      }
-    },
-    "mood.history.empty" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No mood records yet\nStart your journey to record moods along the way"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "还没有心绪记录\n开始你的旅程，记录沿途心绪"
-          }
-        }
-      }
-    },
-    "mood.history.subtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Review all your mood records"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "回顾所有心绪记录"
-          }
-        }
-      }
-    },
-    "mood.history.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mood History"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "心绪回顾"
-          }
-        }
-      }
-    },
-    "node.add_retroactive" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add Mood"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "补录心绪"
-          }
-        }
-      }
-    },
-    "node.create.multi_select_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can select multiple moods"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可以选择多个心绪"
-          }
-        }
-      }
-    },
-    "node.hint.start_journey" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start a journey to record mood on map"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始旅程后，可在地图上长按记录心绪"
-          }
-        }
-      }
     }
   },
   "version" : "1.0"

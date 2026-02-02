@@ -2,144 +2,185 @@
 //  SacredSite.swift
 //  Leyhome - 地脉归途
 //
-//  圣迹数据模型
+//  圣迹数据模型 - 三层地脉节点体系
 //
 //  Created on 2026/01/28.
+//  Rewritten on 2026/01/30: Day 6 完整圣迹系统
 //
 
 import Foundation
+import SwiftUI
 import SwiftData
 import CoreLocation
 
-/// 圣迹层级
-enum SacredSiteTier: String, Codable {
-    case tier1 = "tier1"  // 源点圣迹（金色）
-    case tier2 = "tier2"  // 地脉节点（琥珀）
-    case tier3 = "tier3"  // 心绪锚点（淡蓝）
+// MARK: - SiteTier
 
-    /// 层级名称
-    var displayName: String {
+/// 圣迹层级（GDD 2.2 三层地脉节点体系）
+enum SiteTier: Int, Codable, CaseIterable {
+    case primal = 1      // 源点圣迹 (Tier 1)
+    case leyNode = 2     // 地脉节点 (Tier 2)
+    case anchor = 3      // 心绪锚点 (Tier 3)
+
+    var nameZh: String {
         switch self {
-        case .tier1: return "源点圣迹"
-        case .tier2: return "地脉节点"
-        case .tier3: return "心绪锚点"
+        case .primal: return "源点圣迹"
+        case .leyNode: return "地脉节点"
+        case .anchor: return "心绪锚点"
+        }
+    }
+
+    var nameEn: String {
+        switch self {
+        case .primal: return "Primal Site"
+        case .leyNode: return "Ley Node"
+        case .anchor: return "Anchor of Serenity"
+        }
+    }
+
+    var localizedName: String {
+        let lang = LocalizationManager.shared.currentLanguage
+        return lang.hasPrefix("zh") ? nameZh : nameEn
+    }
+
+    /// GDD 6.3 图标设计
+    var iconStyle: SiteIconStyle {
+        switch self {
+        case .primal: return .mandala
+        case .leyNode: return .elegant
+        case .anchor: return .ripple
+        }
+    }
+
+    /// 层级对应颜色
+    var color: Color {
+        switch self {
+        case .primal: return LeyhomeTheme.SacredSite.tier1
+        case .leyNode: return LeyhomeTheme.SacredSite.tier2
+        case .anchor: return LeyhomeTheme.SacredSite.tier3
         }
     }
 }
 
+/// 图标风格
+enum SiteIconStyle {
+    case mandala   // 曼陀罗（动态旋转的光构几何体）
+    case elegant   // 精致线条（静态图标）
+    case ripple    // 涟漪光点
+}
+
+// MARK: - SacredSite Model
+
 /// 圣迹模型
 @Model
-class SacredSite {
-    /// 唯一标识
+class SacredSite: Identifiable {
     @Attribute(.unique) var id: UUID
 
-    /// 圣迹名称
-    var name: String
+    /// 层级（存储为 Int）
+    var tier: Int
 
-    /// 圣迹描述
-    var siteDescription: String?
+    // MARK: 双语内容
+    var nameZh: String
+    var nameEn: String
+    var descriptionZh: String
+    var descriptionEn: String
+    var loreZh: String          // 地脉解读（GDD: 充满灵性的官方文字）
+    var loreEn: String
+    var historyZh: String?      // 历史与传说
+    var historyEn: String?
 
-    /// 圣迹层级
-    var tier: SacredSiteTier
+    // MARK: 位置
+    var latitude: Double
+    var longitude: Double
+    var continent: String       // 大洲分类
+    var country: String
+    var region: String?
 
-    /// 地点坐标（JSON 存储）
-    var locationData: Data?
+    // MARK: 媒体
+    var imageUrl: String?
+    var videoUrl: String?
 
-    /// 地址
-    var address: String?
+    // MARK: 统计
+    var visitorCount: Int
+    var echoCount: Int
+    var intentionCount: Int
 
-    /// 封面图片路径
-    var coverImagePath: String?
+    // MARK: 创建者（用户提名的圣迹）
+    var creatorId: UUID?
+    var creatorName: String?
 
-    /// 是否已收藏
+    // MARK: 收藏
     var isFavorite: Bool
 
-    /// 收藏的用户 ID 列表（JSON 存储）
-    var favoriteUserIDsData: Data?
-
-    /// 访问次数
-    var visitCount: Int
-
-    /// 创建时间
+    // MARK: 时间
     var createdAt: Date
-
-    /// 最后更新时间
     var updatedAt: Date
 
-    // MARK: - 计算属性
-
-    /// 地点坐标
-    var location: CLLocationCoordinate2D? {
-        get {
-            guard let data = locationData,
-                  let codable = try? JSONDecoder().decode(CodableCoordinate.self, from: data) else {
-                return nil
-            }
-            return codable.coordinate
-        }
-        set {
-            if let newValue = newValue {
-                locationData = try? JSONEncoder().encode(CodableCoordinate(from: newValue))
-            } else {
-                locationData = nil
-            }
-        }
-    }
-
-    /// 收藏的用户 ID 列表
-    var favoriteUserIDs: [String] {
-        get {
-            guard let data = favoriteUserIDsData else { return [] }
-            return (try? JSONDecoder().decode([String].self, from: data)) ?? []
-        }
-        set {
-            favoriteUserIDsData = try? JSONEncoder().encode(newValue)
-        }
-    }
-
-    // MARK: - 初始化
+    // MARK: - Init
 
     init(
-        id: UUID = UUID(),
-        name: String,
-        siteDescription: String? = nil,
-        tier: SacredSiteTier = .tier3,
-        address: String? = nil,
-        coverImagePath: String? = nil,
-        isFavorite: Bool = false,
-        visitCount: Int = 0
+        tier: SiteTier,
+        nameZh: String,
+        nameEn: String
     ) {
-        self.id = id
-        self.name = name
-        self.siteDescription = siteDescription
-        self.tier = tier
-        self.address = address
-        self.coverImagePath = coverImagePath
-        self.isFavorite = isFavorite
-        self.visitCount = visitCount
+        self.id = UUID()
+        self.tier = tier.rawValue
+        self.nameZh = nameZh
+        self.nameEn = nameEn
+        self.descriptionZh = ""
+        self.descriptionEn = ""
+        self.loreZh = ""
+        self.loreEn = ""
+        self.latitude = 0
+        self.longitude = 0
+        self.continent = ""
+        self.country = ""
+        self.visitorCount = 0
+        self.echoCount = 0
+        self.intentionCount = 0
+        self.isFavorite = false
         self.createdAt = Date()
         self.updatedAt = Date()
     }
 
-    // MARK: - 方法
+    // MARK: - Computed Properties
 
-    /// 切换收藏状态
-    func toggleFavorite(for userID: String) {
-        var ids = favoriteUserIDs
-        if let index = ids.firstIndex(of: userID) {
-            ids.remove(at: index)
-            isFavorite = false
-        } else {
-            ids.append(userID)
-            isFavorite = true
-        }
-        favoriteUserIDs = ids
+    var siteTier: SiteTier {
+        SiteTier(rawValue: tier) ?? .anchor
+    }
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    var name: String {
+        let lang = LocalizationManager.shared.currentLanguage
+        return lang.hasPrefix("zh") ? nameZh : nameEn
+    }
+
+    var siteDescription: String {
+        let lang = LocalizationManager.shared.currentLanguage
+        return lang.hasPrefix("zh") ? descriptionZh : descriptionEn
+    }
+
+    var lore: String {
+        let lang = LocalizationManager.shared.currentLanguage
+        return lang.hasPrefix("zh") ? loreZh : loreEn
+    }
+
+    var history: String? {
+        let lang = LocalizationManager.shared.currentLanguage
+        return lang.hasPrefix("zh") ? historyZh : historyEn
+    }
+
+    // MARK: - Methods
+
+    func toggleFavorite() {
+        isFavorite.toggle()
         updatedAt = Date()
     }
 
-    /// 增加访问次数
     func incrementVisitCount() {
-        visitCount += 1
+        visitorCount += 1
         updatedAt = Date()
     }
 }

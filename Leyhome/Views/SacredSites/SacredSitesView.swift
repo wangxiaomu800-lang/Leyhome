@@ -2,67 +2,99 @@
 //  SacredSitesView.swift
 //  Leyhome - 地脉归途
 //
-//  圣迹视图 - 展示三层地脉节点体系（源点圣迹、地脉节点、心绪锚点）
+//  圣迹视图 - 星脉图 / 列表切换
 //
 //  Created on 2026/01/26.
+//  Rewritten on 2026/01/30: Day 6 完整圣迹系统
 //
 
 import SwiftUI
 
 struct SacredSitesView: View {
+    @State private var sites: [SacredSite] = []
+    @State private var viewMode: SacredViewMode = .starMap
+
+    enum SacredViewMode: String, CaseIterable {
+        case starMap = "star_map"
+        case list = "list"
+
+        var icon: String {
+            switch self {
+            case .starMap: return "globe.americas.fill"
+            case .list: return "list.bullet"
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
-                // 背景色
-                LeyhomeTheme.Background.primary
-                    .ignoresSafeArea()
+                // 星脉图背景（暗色）
+                if viewMode == .starMap {
+                    Color(hex: "0a0a1a").ignoresSafeArea()
+                } else {
+                    LeyhomeTheme.Background.primary.ignoresSafeArea()
+                }
 
-                VStack(spacing: LeyhomeTheme.Spacing.lg) {
-                    Spacer()
+                VStack(spacing: 0) {
+                    // 顶部标题栏
+                    headerBar
 
-                    // 星脉图占位图标
-                    ZStack {
-                        // 外圈光晕
-                        Circle()
-                            .fill(
-                                RadialGradient(
-                                    colors: [
-                                        LeyhomeTheme.starlight.opacity(0.3),
-                                        LeyhomeTheme.starlight.opacity(0)
-                                    ],
-                                    center: .center,
-                                    startRadius: 40,
-                                    endRadius: 100
-                                )
-                            )
-                            .frame(width: 200, height: 200)
-
-                        // 中心星辰
-                        Image(systemName: "star.fill")
-                            .font(.system(size: 64))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [LeyhomeTheme.accent, LeyhomeTheme.SacredSite.tier1],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                    // 内容区
+                    switch viewMode {
+                    case .starMap:
+                        StarMapView(sites: sites)
+                    case .list:
+                        SacredSiteListView(sites: sites)
                     }
-
-                    // 提示文字
-                    Text("sacred_sites.placeholder".localized)
-                        .font(LeyhomeTheme.Fonts.body)
-                        .foregroundColor(LeyhomeTheme.primary.opacity(0.8))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, LeyhomeTheme.Spacing.xl)
-
-                    Spacer()
                 }
             }
             .navigationBarHidden(true)
+            .onAppear {
+                if sites.isEmpty {
+                    sites = SacredSiteData.loadAllSites()
+                }
+            }
         }
     }
+
+    // MARK: - Header Bar
+
+    private var headerBar: some View {
+        HStack {
+            Text("tab.sacred_sites".localized)
+                .font(LeyhomeTheme.Fonts.headline)
+                .foregroundColor(viewMode == .starMap ? .white : LeyhomeTheme.textPrimary)
+
+            Spacer()
+
+            // 视图切换
+            HStack(spacing: 0) {
+                ForEach(SacredViewMode.allCases, id: \.self) { mode in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            viewMode = mode
+                        }
+                    } label: {
+                        Image(systemName: mode.icon)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(viewMode == mode ? .white : (viewMode == .starMap ? .white.opacity(0.5) : LeyhomeTheme.textMuted))
+                            .frame(width: 36, height: 32)
+                            .background(viewMode == mode ? LeyhomeTheme.primary : Color.clear)
+                            .cornerRadius(6)
+                    }
+                }
+            }
+            .padding(2)
+            .background(viewMode == .starMap ? Color.white.opacity(0.1) : Color(.systemGray5))
+            .cornerRadius(8)
+        }
+        .padding(.horizontal, LeyhomeTheme.Spacing.md)
+        .padding(.vertical, LeyhomeTheme.Spacing.sm)
+    }
 }
+
+// MARK: - Preview
 
 #Preview {
     SacredSitesView()
