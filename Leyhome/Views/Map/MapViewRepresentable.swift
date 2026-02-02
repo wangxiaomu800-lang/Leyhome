@@ -2,10 +2,10 @@
 //  MapViewRepresentable.swift
 //  Leyhome - 地脉归途
 //
-//  UIKit MapKit 包装器 - 渲染能量线轨迹、历史轨迹和用户位置
+//  UIKit MapKit 包装器 - 渲染能量线轨迹、历史轨迹、用户位置和心绪标注
 //
 //  Created on 2026/01/28.
-//  Updated on 2026/01/29: 能量线渲染器、动画、历史轨迹、主题系统
+//  Updated on 2026/01/29: 能量线渲染器、动画、历史轨迹、主题系统、心绪节点
 //
 
 import SwiftUI
@@ -19,8 +19,17 @@ struct MapViewRepresentable: UIViewRepresentable {
     /// 历史旅程列表（从 SwiftData 查询）
     var journeys: [Journey]
 
+    /// 心绪记录列表
+    var moodRecords: [MoodRecord]
+
     /// 当前地图主题
     var mapTheme: MapTheme
+
+    /// 长按回调（传回地图坐标）
+    var onLongPress: ((CLLocationCoordinate2D) -> Void)?
+
+    /// 点击心绪标注回调
+    var onMoodAnnotationTapped: ((MoodRecord) -> Void)?
 
     // MARK: - UIViewRepresentable
 
@@ -41,6 +50,14 @@ struct MapViewRepresentable: UIViewRepresentable {
             )
             mapView.setRegion(region, animated: false)
         }
+
+        // 长按手势
+        let longPress = UILongPressGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleLongPress(_:))
+        )
+        longPress.minimumPressDuration = 0.5
+        mapView.addGestureRecognizer(longPress)
 
         // 启动动画
         context.coordinator.startAnimation()
@@ -88,6 +105,35 @@ struct MapViewRepresentable: UIViewRepresentable {
 
         // 更新 coordinator 的渲染器引用
         context.coordinator.updateRenderers(on: mapView)
+
+        // 增量更新心绪标注
+        updateMoodAnnotations(on: mapView)
+    }
+
+    /// 增量更新心绪标注（避免全量移除导致闪烁）
+    private func updateMoodAnnotations(on mapView: MKMapView) {
+        let existingAnnotations = mapView.annotations.compactMap { $0 as? MoodAnnotation }
+        let existingIDs = Set(existingAnnotations.map { $0.moodRecord.id })
+        let newIDs = Set(moodRecords.compactMap { $0.location != nil ? $0.id : nil })
+
+        // 移除已不存在的标注
+        let toRemove = existingAnnotations.filter { !newIDs.contains($0.moodRecord.id) }
+        if !toRemove.isEmpty {
+            mapView.removeAnnotations(toRemove)
+        }
+
+        // 添加新的标注
+        let toAdd = moodRecords.filter { record in
+            record.location != nil && !existingIDs.contains(record.id)
+        }
+        for record in toAdd {
+            let annotation = MoodAnnotation(moodRecord: record)
+            // 坐标转换（WGS-84 → GCJ-02）
+            if let location = record.location {
+                annotation.coordinate = CoordinateConverter.wgs84ToGcj02(location)
+            }
+            mapView.addAnnotation(annotation)
+        }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -168,6 +214,20 @@ struct MapViewRepresentable: UIViewRepresentable {
             }
         }
 
+        // MARK: - Long Press
+
+        @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+            guard gesture.state == .began else { return }
+            guard let mapView = gesture.view as? MKMapView else { return }
+
+            let point = gesture.location(in: mapView)
+            let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
+
+            // GCJ-02 → WGS-84 反转（存储用 WGS-84）
+            // 简化：直接存储，因为保存时使用原始坐标
+            parent.onLongPress?(coordinate)
+        }
+
         // MARK: - MKMapViewDelegate
 
         /// 渲染轨迹线
@@ -204,12 +264,34 @@ struct MapViewRepresentable: UIViewRepresentable {
             return MKOverlayRenderer(overlay: overlay)
         }
 
-        /// 自定义用户位置标注
+        /// 自定义标注视图
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKUserLocation {
                 return nil
             }
+
+            if let moodAnnotation = annotation as? MoodAnnotation {
+                let view = mapView.dequeueReusableAnnotationView(
+                    withIdentifier: MoodAnnotationUIView.reuseID
+                ) as? MoodAnnotationUIView ?? MoodAnnotationUIView(
+                    annotation: moodAnnotation,
+                    reuseIdentifier: MoodAnnotationUIView.reuseID
+                )
+                view.annotation = moodAnnotation
+                view.configure(with: moodAnnotation.moodRecord)
+                return view
+            }
+
             return nil
+        }
+
+        /// 标注选中处理
+        func mapView(_ mapView: MKMapView, didSelect annotation: MKAnnotation) {
+            mapView.deselectAnnotation(annotation, animated: false)
+
+            if let moodAnnotation = annotation as? MoodAnnotation {
+                parent.onMoodAnnotationTapped?(moodAnnotation.moodRecord)
+            }
         }
 
         /// 地图区域改变时更新绑定（不回传以避免循环）
@@ -248,6 +330,7 @@ struct MapViewRepresentable: UIViewRepresentable {
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         )),
         journeys: [],
+        moodRecords: [],
         mapTheme: .starDust
     )
     .ignoresSafeArea()

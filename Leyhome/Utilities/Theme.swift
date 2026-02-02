@@ -80,6 +80,9 @@ struct LeyhomeTheme {
         static let inspiration = Color(hex: "DDA0DD") // 灵感 - 淡紫
         static let nostalgia = Color(hex: "DEB887")  // 怀旧 - 沙棕
         static let gratitude = Color(hex: "98D8C8")  // 感恩 - 青绿
+        static let melancholy = Color(hex: "778899") // 惆怅 - 青灰
+        static let wonder = Color(hex: "FF8C69")     // 惊奇 - 珊瑚橙
+        static let peace = Color(hex: "B0C4DE")      // 安宁 - 淡钢蓝
     }
 
     // MARK: - 圣迹层级颜色

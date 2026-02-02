@@ -6,7 +6,7 @@
 //
 //  Created on 2026/01/26.
 //  Refactored on 2026/01/28: Full GPS tracking integration
-//  Updated on 2026/01/29: 历史轨迹、能量线、地图主题
+//  Updated on 2026/01/29: 历史轨迹、能量线、地图主题、心绪旅程绑定
 //
 
 import SwiftUI
@@ -21,6 +21,9 @@ struct MapView: View {
     /// 从 SwiftData 查询所有已保存的旅程（按开始时间降序）
     @Query(sort: \Journey.startTime, order: .reverse) private var journeys: [Journey]
 
+    /// 从 SwiftData 查询所有心绪记录（按记录时间降序）
+    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var moodRecords: [MoodRecord]
+
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 39.9042, longitude: 116.4074), // 默认北京
         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -28,6 +31,15 @@ struct MapView: View {
     @State private var showStopConfirmation = false
     @State private var showPermissionAlert = false
     @State private var showThemePicker = false
+    @State private var showMoodCreationSheet = false
+    @State private var longPressCoordinate: CLLocationCoordinate2D?
+    @State private var selectedMoodRecord: MoodRecord?
+
+    /// 当前追踪期间创建的心绪 ID 列表
+    @State private var trackingMoodRecordIDs: [UUID] = []
+
+    /// 未追踪时长按提示
+    @State private var showTrackingHint = false
 
     var body: some View {
         NavigationStack {
@@ -37,7 +49,14 @@ struct MapView: View {
                     trackingManager: trackingManager,
                     region: $region,
                     journeys: journeys,
-                    mapTheme: themeManager.currentTheme
+                    moodRecords: moodRecords,
+                    mapTheme: themeManager.currentTheme,
+                    onLongPress: { coordinate in
+                        handleLongPress(coordinate)
+                    },
+                    onMoodAnnotationTapped: { record in
+                        selectedMoodRecord = record
+                    }
                 )
                 .ignoresSafeArea()
 
@@ -70,6 +89,24 @@ struct MapView: View {
                     .transition(.opacity)
                 }
 
+                // 长按提示 Toast
+                if showTrackingHint {
+                    VStack {
+                        Spacer()
+
+                        Text("node.hint.start_journey".localized)
+                            .font(LeyhomeTheme.Fonts.bodySmall)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, LeyhomeTheme.Spacing.lg)
+                            .padding(.vertical, LeyhomeTheme.Spacing.md)
+                            .background(Color.black.opacity(0.75))
+                            .cornerRadius(LeyhomeTheme.CornerRadius.lg)
+                            .padding(.bottom, 120)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(10)
+                }
+
                 // 主题切换按钮（右上角）
                 VStack {
                     HStack {
@@ -99,6 +136,7 @@ struct MapView: View {
             }
             .navigationBarHidden(true)
             .animation(.easeInOut(duration: 0.3), value: trackingManager.isTracking)
+            .animation(.easeInOut(duration: 0.3), value: showTrackingHint)
             .alert("recording.stop.confirm.title".localized, isPresented: $showStopConfirmation) {
                 Button("button.cancel".localized, role: .cancel) {}
                 Button("recording.stop.confirm".localized, role: .destructive) {
@@ -115,6 +153,22 @@ struct MapView: View {
             .sheet(isPresented: $showThemePicker) {
                 ThemePickerView(themeManager: themeManager)
                     .presentationDetents([.medium])
+            }
+            .sheet(isPresented: $showMoodCreationSheet) {
+                if let coordinate = longPressCoordinate {
+                    NodeCreatorSheet(
+                        coordinate: coordinate,
+                        journeyID: nil, // journeyID 在停止追踪后回写
+                        onSave: { recordID in
+                            trackingMoodRecordIDs.append(recordID)
+                        }
+                    )
+                    .presentationDetents([.large])
+                }
+            }
+            .sheet(item: $selectedMoodRecord) { record in
+                NodeDetailView(moodRecord: record)
+                    .presentationDetents([.large])
             }
             .onAppear {
                 checkLocationPermission()
@@ -143,10 +197,32 @@ struct MapView: View {
                     trackingManager.stopLocationUpdates()
                 }
             }
+            .onChange(of: trackingManager.isTracking) { _, isTracking in
+                if isTracking {
+                    // 开始追踪时清空心绪 ID 列表
+                    trackingMoodRecordIDs = []
+                }
+            }
         }
     }
 
     // MARK: - Actions
+
+    /// 处理长按地图
+    private func handleLongPress(_ coordinate: CLLocationCoordinate2D) {
+        if trackingManager.isTracking {
+            longPressCoordinate = coordinate
+            showMoodCreationSheet = true
+        } else {
+            // 未追踪时显示提示
+            showTrackingHint = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                withAnimation {
+                    showTrackingHint = false
+                }
+            }
+        }
+    }
 
     /// 检查定位权限
     private func checkLocationPermission() {
@@ -169,14 +245,28 @@ struct MapView: View {
             return
         }
 
+        // 将追踪期间的心绪 IDs 写入 Journey
+        journey.moodRecordIDs = trackingMoodRecordIDs
+
         modelContext.insert(journey)
 
         do {
             try modelContext.save()
-            print("✅ Journey 保存成功：\(journey.name)")
+            print("✅ Journey 保存成功：\(journey.name)，关联心绪 \(trackingMoodRecordIDs.count) 条")
+
+            // 回写 journeyID 到关联的 MoodRecord
+            let journeyID = journey.id
+            let moodIDs = trackingMoodRecordIDs
+            for record in moodRecords where moodIDs.contains(record.id) {
+                record.journeyID = journeyID
+            }
+            try modelContext.save()
         } catch {
             print("❌ Journey 保存失败：\(error.localizedDescription)")
         }
+
+        // 清空追踪期间的心绪 IDs
+        trackingMoodRecordIDs = []
     }
 }
 
@@ -247,5 +337,5 @@ struct ThemePickerView: View {
 
 #Preview {
     MapView()
-        .modelContainer(for: [Journey.self], inMemory: true)
+        .modelContainer(for: [Journey.self, MoodRecord.self], inMemory: true)
 }

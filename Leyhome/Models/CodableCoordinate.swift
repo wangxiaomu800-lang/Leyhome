@@ -13,7 +13,7 @@ import CoreLocation
 
 /// 可编码的坐标包装器
 @preconcurrency
-struct CodableCoordinate: Codable, Hashable, Sendable {
+struct CodableCoordinate: Hashable, Sendable {
     let latitude: Double
     let longitude: Double
 
@@ -32,13 +32,33 @@ struct CodableCoordinate: Codable, Hashable, Sendable {
     // MARK: - 转换
 
     /// 转换为 CLLocationCoordinate2D
-    var coordinate: CLLocationCoordinate2D {
+    nonisolated var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
     /// 是否为有效坐标
-    var isValid: Bool {
+    nonisolated var isValid: Bool {
         CLLocationCoordinate2DIsValid(coordinate)
+    }
+}
+
+// MARK: - Codable (nonisolated)
+
+extension CodableCoordinate: Codable {
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.latitude = try container.decode(Double.self, forKey: .latitude)
+        self.longitude = try container.decode(Double.self, forKey: .longitude)
+    }
+
+    nonisolated func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case latitude, longitude
     }
 }
 

@@ -8,7 +8,7 @@
 //
 
 import SwiftUI
-import Auth
+import Supabase
 
 struct SettingsView: View {
     @EnvironmentObject var authManager: AuthManager

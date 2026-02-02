@@ -2,7 +2,7 @@
 //  JourneyDetailView.swift
 //  Leyhome - 地脉归途
 //
-//  旅程详情视图 - 地图预览、统计数据、删除
+//  旅程详情视图 - 地图预览、统计数据、心绪列表、删除
 //
 //  Created on 2026/01/29.
 //
@@ -16,8 +16,19 @@ struct JourneyDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let journey: Journey
 
+    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
+
     @State private var showDeleteConfirmation = false
+    @State private var showAddMoodSheet = false
+    @State private var selectedMoodRecord: MoodRecord?
     @State private var mapRegion: MKCoordinateRegion
+
+    /// 当前旅程关联的心绪记录
+    private var journeyMoodRecords: [MoodRecord] {
+        guard !journey.moodRecordIDs.isEmpty else { return [] }
+        return allMoodRecords.filter { journey.moodRecordIDs.contains($0.id) }
+            .sorted { $0.recordTime < $1.recordTime }
+    }
 
     init(journey: Journey) {
         self.journey = journey
@@ -64,6 +75,9 @@ struct JourneyDetailView: View {
                     // 统计数据
                     statsSection
 
+                    // 心绪列表
+                    moodSection
+
                     // 删除按钮
                     deleteButton
                 }
@@ -84,7 +98,34 @@ struct JourneyDetailView: View {
                     deleteJourney()
                 }
             }
+            .sheet(isPresented: $showAddMoodSheet) {
+                // 补录心绪 - 使用旅程中间点坐标
+                let midCoordinate = journeyMidCoordinate
+                NodeCreatorSheet(
+                    coordinate: midCoordinate,
+                    journeyID: journey.id,
+                    onSave: { recordID in
+                        journey.moodRecordIDs.append(recordID)
+                        try? modelContext.save()
+                    }
+                )
+                .presentationDetents([.large])
+            }
+            .sheet(item: $selectedMoodRecord) { record in
+                NodeDetailView(moodRecord: record)
+                    .presentationDetents([.large])
+            }
         }
+    }
+
+    /// 旅程路径中点坐标（补录心绪时使用）
+    private var journeyMidCoordinate: CLLocationCoordinate2D {
+        let points = journey.pathPoints
+        if points.isEmpty {
+            return CLLocationCoordinate2D(latitude: 39.9042, longitude: 116.4074)
+        }
+        let midIndex = points.count / 2
+        return points[midIndex]
     }
 
     // MARK: - Map Preview
@@ -166,6 +207,66 @@ struct JourneyDetailView: View {
         .padding(.vertical, LeyhomeTheme.Spacing.sm)
     }
 
+    // MARK: - Mood Section
+
+    private var moodSection: some View {
+        VStack(alignment: .leading, spacing: LeyhomeTheme.Spacing.md) {
+            HStack {
+                Image(systemName: "heart.text.square")
+                    .foregroundColor(LeyhomeTheme.accent)
+                Text("journey.mood_records".localized)
+                    .font(LeyhomeTheme.Fonts.headline)
+                    .foregroundColor(LeyhomeTheme.textPrimary)
+
+                Spacer()
+
+                // 补录心绪按钮
+                Button {
+                    showAddMoodSheet = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 14))
+                        Text("node.add_retroactive".localized)
+                            .font(LeyhomeTheme.Fonts.caption)
+                    }
+                    .foregroundColor(LeyhomeTheme.accent)
+                }
+            }
+
+            if journeyMoodRecords.isEmpty {
+                // 空状态
+                VStack(spacing: 8) {
+                    Image(systemName: "heart.slash")
+                        .font(.system(size: 24))
+                        .foregroundColor(LeyhomeTheme.textMuted)
+                    Text("journey.no_mood_records".localized)
+                        .font(LeyhomeTheme.Fonts.bodySmall)
+                        .foregroundColor(LeyhomeTheme.textMuted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, LeyhomeTheme.Spacing.lg)
+            } else {
+                // 心绪列表
+                ForEach(journeyMoodRecords) { record in
+                    Button {
+                        selectedMoodRecord = record
+                    } label: {
+                        MoodRecordRow(record: record)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(LeyhomeTheme.Spacing.md)
+        .background(LeyhomeTheme.Background.card)
+        .cornerRadius(LeyhomeTheme.CornerRadius.md)
+        .shadow(
+            color: LeyhomeTheme.Shadow.light.color,
+            radius: LeyhomeTheme.Shadow.light.radius
+        )
+    }
+
     // MARK: - Delete Button
 
     private var deleteButton: some View {
@@ -219,6 +320,60 @@ struct JourneyDetailView: View {
         modelContext.delete(journey)
         try? modelContext.save()
         dismiss()
+    }
+}
+
+// MARK: - MoodRecordRow
+
+/// 心绪记录行组件（共享给 JourneyDetailView 和 MoodHistoryView）
+struct MoodRecordRow: View {
+    let record: MoodRecord
+
+    var body: some View {
+        HStack(spacing: LeyhomeTheme.Spacing.md) {
+            // 心绪图标
+            ZStack {
+                Circle()
+                    .fill(record.moodType.color.opacity(0.15))
+                    .frame(width: 40, height: 40)
+
+                Image(systemName: record.moodType.icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(record.moodType.color)
+            }
+
+            // 内容
+            VStack(alignment: .leading, spacing: 4) {
+                // 心绪名称（多心绪时显示全部）
+                HStack(spacing: 4) {
+                    ForEach(record.moodTypes, id: \.rawValue) { mood in
+                        Text(mood.localizedName)
+                            .font(LeyhomeTheme.Fonts.bodySmall)
+                            .foregroundColor(mood.color)
+                    }
+                }
+
+                // 时间
+                Text(record.recordTime, style: .time)
+                    .font(LeyhomeTheme.Fonts.caption)
+                    .foregroundColor(LeyhomeTheme.textMuted)
+
+                // 文字摘要
+                if let note = record.note, !note.isEmpty {
+                    Text(note)
+                        .font(LeyhomeTheme.Fonts.caption)
+                        .foregroundColor(LeyhomeTheme.textSecondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(LeyhomeTheme.textMuted)
+        }
+        .padding(.vertical, LeyhomeTheme.Spacing.sm)
     }
 }
 

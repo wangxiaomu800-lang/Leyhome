@@ -8,11 +8,16 @@
 //
 
 import SwiftUI
-import Auth
+import Supabase
+import SwiftData
 
 struct ProfileView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var showSettings = false
+    @State private var showMoodHistory = false
+
+    @Query(sort: \Journey.startTime, order: .reverse) private var journeys: [Journey]
+    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var moodRecords: [MoodRecord]
 
     var body: some View {
         NavigationStack {
@@ -52,8 +57,15 @@ struct ProfileView: View {
 
                     // 统计卡片
                     HStack(spacing: LeyhomeTheme.Spacing.md) {
-                        ProfileStatCard(title: "轨迹", value: "0", icon: "map")
-                        ProfileStatCard(title: "心绪", value: "0", icon: "heart")
+                        ProfileStatCard(title: "轨迹", value: "\(journeys.count)", icon: "map")
+
+                        Button {
+                            showMoodHistory = true
+                        } label: {
+                            ProfileStatCard(title: "心绪", value: "\(moodRecords.count)", icon: "heart")
+                        }
+                        .buttonStyle(.plain)
+
                         ProfileStatCard(title: "圣迹", value: "0", icon: "star")
                     }
                     .padding(.horizontal, LeyhomeTheme.Spacing.lg)
@@ -65,6 +77,16 @@ struct ProfileView: View {
                             title: "设置",
                             subtitle: "账号与偏好设置",
                             action: { showSettings = true }
+                        )
+
+                        Divider()
+                            .padding(.leading, 60)
+
+                        ProfileMenuItem(
+                            icon: "heart.text.square",
+                            title: "mood.history.title".localized,
+                            subtitle: "mood.history.subtitle".localized,
+                            action: { showMoodHistory = true }
                         )
 
                         Divider()
@@ -128,6 +150,9 @@ struct ProfileView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView()
                     .environmentObject(authManager)
+            }
+            .navigationDestination(isPresented: $showMoodHistory) {
+                MoodHistoryView()
             }
         }
     }
