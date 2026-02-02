@@ -2,36 +2,59 @@
 //  SacredSiteListView.swift
 //  Leyhome - 地脉归途
 //
-//  圣迹列表视图 - 按大洲分组、筛选、搜索
+//  圣迹列表视图 - 按大洲分组、筛选、搜索、向往筛选
 //
 //  Created on 2026/01/30.
+//  Updated on 2026/02/03: 增加「我亦向往」筛选
 //
 
 import SwiftUI
+
+// MARK: - SiteFilterMode
+
+enum SiteFilterMode: Equatable {
+    case all
+    case tier(SiteTier)
+    case aspired
+}
 
 struct SacredSiteListView: View {
     let sites: [SacredSite]
 
     @State private var searchText = ""
-    @State private var selectedTier: SiteTier?
+    @State private var filterMode: SiteFilterMode = .all
+    @StateObject private var aspiredManager = AspiredSitesManager.shared
 
     var body: some View {
         List {
-            // 筛选器
+            // Filter bar
             Section {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        FilterChip(title: "sacred.all".localized, isSelected: selectedTier == nil) {
-                            selectedTier = nil
+                        FilterChip(
+                            title: "sacred.all".localized,
+                            isSelected: filterMode == .all
+                        ) {
+                            filterMode = .all
                         }
+
                         ForEach(SiteTier.allCases, id: \.self) { tier in
                             FilterChip(
                                 title: tier.localizedName,
-                                isSelected: selectedTier == tier,
+                                isSelected: filterMode == .tier(tier),
                                 color: tier.color
                             ) {
-                                selectedTier = selectedTier == tier ? nil : tier
+                                filterMode = filterMode == .tier(tier) ? .all : .tier(tier)
                             }
+                        }
+
+                        // Aspired filter
+                        FilterChip(
+                            title: "sacred.aspired".localized,
+                            isSelected: filterMode == .aspired,
+                            color: Color.pink
+                        ) {
+                            filterMode = filterMode == .aspired ? .all : .aspired
                         }
                     }
                     .padding(.vertical, LeyhomeTheme.Spacing.xs)
@@ -40,10 +63,10 @@ struct SacredSiteListView: View {
                 .listRowBackground(Color.clear)
             }
 
-            // 按大洲分组
-            ForEach(groupedSites.keys.sorted(), id: \.self) { continent in
-                Section(header: Text(continent)) {
-                    ForEach(groupedSites[continent] ?? []) { site in
+            // Grouped sites
+            ForEach(groupedSites.keys.sorted(), id: \.self) { groupKey in
+                Section(header: Text(groupKey)) {
+                    ForEach(groupedSites[groupKey] ?? []) { site in
                         NavigationLink(destination: SacredSiteDetailView(site: site)) {
                             SiteRowView(site: site)
                         }
@@ -58,8 +81,13 @@ struct SacredSiteListView: View {
     private var filteredSites: [SacredSite] {
         var result = sites
 
-        if let tier = selectedTier {
+        switch filterMode {
+        case .all:
+            break
+        case .tier(let tier):
             result = result.filter { $0.siteTier == tier }
+        case .aspired:
+            result = result.filter { aspiredManager.isAspired($0) }
         }
 
         if !searchText.isEmpty {
@@ -74,7 +102,12 @@ struct SacredSiteListView: View {
     }
 
     private var groupedSites: [String: [SacredSite]] {
-        Dictionary(grouping: filteredSites) { $0.continent }
+        switch filterMode {
+        case .aspired:
+            return Dictionary(grouping: filteredSites) { $0.siteTier.localizedName }
+        default:
+            return Dictionary(grouping: filteredSites) { $0.continent }
+        }
     }
 }
 
@@ -85,7 +118,7 @@ struct SiteRowView: View {
 
     var body: some View {
         HStack(spacing: LeyhomeTheme.Spacing.md) {
-            // 层级图标
+            // Tier icon
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(site.siteTier.color.opacity(0.15))

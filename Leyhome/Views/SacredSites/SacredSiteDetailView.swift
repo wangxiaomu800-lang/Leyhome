@@ -5,6 +5,7 @@
 //  圣迹详情页 - 沉浸式头图、地脉解读、历史传说、统计、操作按钮
 //
 //  Created on 2026/01/30.
+//  Updated on 2026/02/03: 向往按钮接入 AspiredSitesManager
 //
 
 import SwiftUI
@@ -13,31 +14,26 @@ struct SacredSiteDetailView: View {
     let site: SacredSite
     @State private var showJourneyPlanner = false
     @State private var showIntentionAlert = false
+    @StateObject private var aspiredManager = AspiredSitesManager.shared
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    // 沉浸式头图
                     heroSection
 
                     VStack(spacing: LeyhomeTheme.Spacing.lg) {
-                        // 地脉解读
                         loreSection
 
-                        // 历史与传说
                         if let history = site.history, !history.isEmpty {
                             historySection(history)
                         }
 
-                        // 统计数据
                         statsSection
 
-                        // 此地的回响（占位）
                         echoesSection
 
-                        // 操作按钮
                         actionButtons
                     }
                     .padding(LeyhomeTheme.Spacing.md)
@@ -62,6 +58,7 @@ struct SacredSiteDetailView: View {
             }
             .alert("intention.aspire".localized, isPresented: $showIntentionAlert) {
                 Button("button.confirm".localized) {
+                    aspiredManager.toggleAspire(site)
                     site.intentionCount += 1
                     site.updatedAt = Date()
                 }
@@ -76,7 +73,6 @@ struct SacredSiteDetailView: View {
 
     private var heroSection: some View {
         ZStack(alignment: .bottomLeading) {
-            // 渐变占位背景
             LinearGradient(
                 colors: [site.siteTier.color, LeyhomeTheme.primary],
                 startPoint: .topLeading,
@@ -84,7 +80,6 @@ struct SacredSiteDetailView: View {
             )
             .frame(height: 300)
 
-            // 星空装饰（Tier 1）
             if site.siteTier == .primal {
                 Canvas { context, size in
                     for _ in 0..<30 {
@@ -98,7 +93,6 @@ struct SacredSiteDetailView: View {
                 .frame(height: 300)
             }
 
-            // 渐变遮罩
             LinearGradient(
                 colors: [.clear, .black.opacity(0.7)],
                 startPoint: .center,
@@ -106,9 +100,7 @@ struct SacredSiteDetailView: View {
             )
             .frame(height: 300)
 
-            // 标题信息
             VStack(alignment: .leading, spacing: 8) {
-                // Tier 标签
                 Text(site.siteTier.localizedName)
                     .font(LeyhomeTheme.Fonts.caption)
                     .foregroundColor(.white)
@@ -205,7 +197,6 @@ struct SacredSiteDetailView: View {
                     .foregroundColor(LeyhomeTheme.textPrimary)
             }
 
-            // 占位
             VStack(spacing: 8) {
                 Image(systemName: "bubble.left.and.text.bubble.right")
                     .font(.system(size: 28))
@@ -227,7 +218,7 @@ struct SacredSiteDetailView: View {
 
     private var actionButtons: some View {
         VStack(spacing: LeyhomeTheme.Spacing.md) {
-            // 规划朝圣之旅
+            // Plan journey
             Button {
                 showJourneyPlanner = true
             } label: {
@@ -239,13 +230,21 @@ struct SacredSiteDetailView: View {
                 .frame(maxWidth: .infinity)
             }
 
-            // 我亦向往
+            // Aspire button - state-dependent
             Button {
-                showIntentionAlert = true
+                if aspiredManager.isAspired(site) {
+                    // Already aspired: directly toggle off
+                    aspiredManager.toggleAspire(site)
+                    site.intentionCount = max(0, site.intentionCount - 1)
+                    site.updatedAt = Date()
+                } else {
+                    // Not aspired: show confirmation
+                    showIntentionAlert = true
+                }
             } label: {
                 HStack {
-                    Image(systemName: "heart.fill")
-                    Text("intention.aspire".localized)
+                    Image(systemName: aspiredManager.isAspired(site) ? "heart.fill" : "heart")
+                    Text(aspiredManager.isAspired(site) ? "intention.aspired".localized : "intention.aspire".localized)
                 }
                 .leyhomeSecondaryButton()
                 .frame(maxWidth: .infinity)
