@@ -13,6 +13,7 @@ import SwiftUI
 struct SacredSitesView: View {
     @State private var sites: [SacredSite] = []
     @State private var viewMode: SacredViewMode = .starMap
+    @State private var showSubmission = false
 
     enum SacredViewMode: String, CaseIterable {
         case starMap = "star_map"
@@ -55,6 +56,9 @@ struct SacredSitesView: View {
                     sites = SacredSiteData.loadAllSites()
                 }
             }
+            .sheet(isPresented: $showSubmission) {
+                SiteSubmissionView()
+            }
         }
     }
 
@@ -67,6 +71,16 @@ struct SacredSitesView: View {
                 .foregroundColor(viewMode == .starMap ? .white : LeyhomeTheme.textPrimary)
 
             Spacer()
+
+            // 申请圣迹
+            Button {
+                showSubmission = true
+            } label: {
+                Image(systemName: "plus.circle")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(viewMode == .starMap ? .white.opacity(0.8) : LeyhomeTheme.primary)
+            }
+            .padding(.trailing, LeyhomeTheme.Spacing.sm)
 
             // 视图切换
             HStack(spacing: 0) {

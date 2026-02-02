@@ -62,7 +62,8 @@ struct SacredSiteDetailView: View {
             }
             .alert("intention.aspire".localized, isPresented: $showIntentionAlert) {
                 Button("button.confirm".localized) {
-                    // 增加向往计数（未来接入后端）
+                    site.intentionCount += 1
+                    site.updatedAt = Date()
                 }
                 Button("button.cancel".localized, role: .cancel) {}
             } message: {

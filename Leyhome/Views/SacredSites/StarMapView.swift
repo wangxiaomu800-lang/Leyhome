@@ -123,7 +123,7 @@ struct SiteMarker: View {
             case .primal:
                 // 曼陀罗动态效果
                 MandalaMarker(rotation: rotation, color: site.siteTier.color)
-                    .frame(width: 44, height: 44)
+                    .frame(width: 30, height: 30)
                     .onAppear {
                         withAnimation(.linear(duration: 10).repeatForever(autoreverses: false)) {
                             rotation = 360
@@ -135,21 +135,21 @@ struct SiteMarker: View {
                 ZStack {
                     Circle()
                         .fill(site.siteTier.color)
-                        .frame(width: 26, height: 26)
+                        .frame(width: 18, height: 18)
 
                     Circle()
-                        .stroke(Color.white, lineWidth: 2)
-                        .frame(width: 26, height: 26)
+                        .stroke(Color.white, lineWidth: 1.5)
+                        .frame(width: 18, height: 18)
 
                     Image(systemName: "diamond.fill")
-                        .font(.system(size: 10))
+                        .font(.system(size: 7))
                         .foregroundColor(.white)
                 }
 
             case .anchor:
                 // 涟漪光点
                 RippleMarker(color: site.siteTier.color)
-                    .frame(width: 22, height: 22)
+                    .frame(width: 16, height: 16)
             }
         }
         .scaleEffect(isSelected ? 1.4 : 1.0)
@@ -169,23 +169,23 @@ struct MandalaMarker: View {
             ForEach(0..<6, id: \.self) { i in
                 Capsule()
                     .fill(color)
-                    .frame(width: 3, height: 18)
-                    .offset(y: -9)
+                    .frame(width: 2, height: 12)
+                    .offset(y: -6)
                     .rotationEffect(.degrees(Double(i) * 60 + rotation))
             }
             // 内圈
             ForEach(0..<6, id: \.self) { i in
                 Capsule()
                     .fill(color.opacity(0.6))
-                    .frame(width: 2, height: 12)
-                    .offset(y: -6)
+                    .frame(width: 1.5, height: 8)
+                    .offset(y: -4)
                     .rotationEffect(.degrees(Double(i) * 60 + 30 + rotation * 0.5))
             }
             // 中心
             Circle()
                 .fill(Color.white)
-                .frame(width: 10, height: 10)
-                .shadow(color: color, radius: 4)
+                .frame(width: 7, height: 7)
+                .shadow(color: color, radius: 3)
         }
     }
 }
@@ -206,7 +206,7 @@ struct RippleMarker: View {
 
             Circle()
                 .fill(color)
-                .frame(width: 8, height: 8)
+                .frame(width: 6, height: 6)
         }
         .onAppear {
             withAnimation(.easeOut(duration: 2.0).repeatForever(autoreverses: false)) {
