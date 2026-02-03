@@ -10,6 +10,7 @@
 import SwiftUI
 import PhotosUI
 import CoreLocation
+import UIKit
 
 struct SacredSiteApplicationView: View {
     @Binding var submitted: Bool
@@ -31,7 +32,7 @@ struct SacredSiteApplicationView: View {
 
     // Step 4: Evidence
     @State private var selectedPhotos: [PhotosPickerItem] = []
-    @State private var photoImages: [Image] = []
+    @State private var loadedImages: [UIImage] = []
 
     // Step 5: Oath
     @State private var oathAgreed = false
@@ -198,10 +199,48 @@ struct SacredSiteApplicationView: View {
                             .stroke(LeyhomeTheme.primary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [6]))
                     )
                 }
+                .onChange(of: selectedPhotos) { _, newItems in
+                    loadImages(from: newItems)
+                }
+
+                // Photo previews
+                if !loadedImages.isEmpty {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ], spacing: 8) {
+                        ForEach(loadedImages.indices, id: \.self) { index in
+                            Image(uiImage: loadedImages[index])
+                                .resizable()
+                                .scaledToFill()
+                                .frame(height: 100)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                    }
+                }
 
                 Text("sacred_app.photos_hint".localized)
                     .font(LeyhomeTheme.Fonts.caption)
                     .foregroundColor(LeyhomeTheme.textMuted)
+            }
+        }
+    }
+
+    private func loadImages(from items: [PhotosPickerItem]) {
+        loadedImages = []
+        for item in items {
+            item.loadTransferable(type: Data.self) { result in
+                switch result {
+                case .success(let data):
+                    if let data = data, let uiImage = UIImage(data: data) {
+                        DispatchQueue.main.async {
+                            loadedImages.append(uiImage)
+                        }
+                    }
+                case .failure:
+                    break
+                }
             }
         }
     }
