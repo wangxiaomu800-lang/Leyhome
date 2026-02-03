@@ -2006,6 +2006,23 @@
         }
       }
     },
+    "sacred_app.site_name_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At least 4 characters (2 Chinese characters)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "至少 4 个字符（2 个汉字）"
+          }
+        }
+      }
+    },
     "sacred_app.step1_subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2216,13 +2233,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This will appear as the site's tagline on its page."
+            "value" : "At least 10 characters (5 Chinese characters). This will appear as the site's tagline."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这将显示为圣迹页面的副标题。"
+            "value" : "至少 10 个字符（5 个汉字），这将显示为圣迹页面的副标题。"
           }
         }
       }

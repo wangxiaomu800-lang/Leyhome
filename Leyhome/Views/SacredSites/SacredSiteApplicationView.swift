@@ -102,18 +102,34 @@ struct SacredSiteApplicationView: View {
             )
 
             VStack(alignment: .leading, spacing: LeyhomeTheme.Spacing.sm) {
-                Text("sacred_app.site_name".localized)
-                    .font(LeyhomeTheme.Fonts.headline)
-                    .foregroundColor(LeyhomeTheme.textPrimary)
+                HStack {
+                    Text("sacred_app.site_name".localized)
+                        .font(LeyhomeTheme.Fonts.headline)
+                        .foregroundColor(LeyhomeTheme.textPrimary)
+                    Spacer()
+                    Text("\(siteName.count)/4")
+                        .font(LeyhomeTheme.Fonts.caption)
+                        .foregroundColor(siteName.count >= 4 ? LeyhomeTheme.success : LeyhomeTheme.textMuted)
+                }
 
                 TextField("sacred_app.site_name_placeholder".localized, text: $siteName)
                     .textFieldStyle(.roundedBorder)
+
+                Text("sacred_app.site_name_hint".localized)
+                    .font(LeyhomeTheme.Fonts.caption)
+                    .foregroundColor(LeyhomeTheme.textMuted)
             }
 
             VStack(alignment: .leading, spacing: LeyhomeTheme.Spacing.sm) {
-                Text("sacred_app.tagline".localized)
-                    .font(LeyhomeTheme.Fonts.headline)
-                    .foregroundColor(LeyhomeTheme.textPrimary)
+                HStack {
+                    Text("sacred_app.tagline".localized)
+                        .font(LeyhomeTheme.Fonts.headline)
+                        .foregroundColor(LeyhomeTheme.textPrimary)
+                    Spacer()
+                    Text("\(siteTagline.count)/10")
+                        .font(LeyhomeTheme.Fonts.caption)
+                        .foregroundColor(siteTagline.count >= 10 ? LeyhomeTheme.success : LeyhomeTheme.textMuted)
+                }
 
                 TextField("sacred_app.tagline_placeholder".localized, text: $siteTagline)
                     .textFieldStyle(.roundedBorder)
@@ -376,7 +392,10 @@ struct SacredSiteApplicationView: View {
     private var isCurrentStepValid: Bool {
         switch currentStep {
         case 0: return selectedCoordinate != nil
-        case 1: return !siteName.trimmingCharacters(in: .whitespaces).isEmpty
+        case 1:
+            let trimmedName = siteName.trimmingCharacters(in: .whitespaces)
+            let trimmedTagline = siteTagline.trimmingCharacters(in: .whitespaces)
+            return trimmedName.count >= 4 && trimmedTagline.count >= 10
         case 2:
             return !historyLegend.trimmingCharacters(in: .whitespaces).isEmpty ||
                    !personalExperience.trimmingCharacters(in: .whitespaces).isEmpty ||
