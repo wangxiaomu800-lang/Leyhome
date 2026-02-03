@@ -107,9 +107,9 @@ struct SacredSiteApplicationView: View {
                         .font(LeyhomeTheme.Fonts.headline)
                         .foregroundColor(LeyhomeTheme.textPrimary)
                     Spacer()
-                    Text("\(siteName.count)/4")
+                    Text("\(siteName.count)/\(minNameLength)")
                         .font(LeyhomeTheme.Fonts.caption)
-                        .foregroundColor(siteName.count >= 4 ? LeyhomeTheme.success : LeyhomeTheme.textMuted)
+                        .foregroundColor(siteName.count >= minNameLength ? LeyhomeTheme.success : LeyhomeTheme.textMuted)
                 }
 
                 TextField("sacred_app.site_name_placeholder".localized, text: $siteName)
@@ -126,9 +126,9 @@ struct SacredSiteApplicationView: View {
                         .font(LeyhomeTheme.Fonts.headline)
                         .foregroundColor(LeyhomeTheme.textPrimary)
                     Spacer()
-                    Text("\(siteTagline.count)/10")
+                    Text("\(siteTagline.count)/\(minTaglineLength)")
                         .font(LeyhomeTheme.Fonts.caption)
-                        .foregroundColor(siteTagline.count >= 10 ? LeyhomeTheme.success : LeyhomeTheme.textMuted)
+                        .foregroundColor(siteTagline.count >= minTaglineLength ? LeyhomeTheme.success : LeyhomeTheme.textMuted)
                 }
 
                 TextField("sacred_app.tagline_placeholder".localized, text: $siteTagline)
@@ -389,13 +389,22 @@ struct SacredSiteApplicationView: View {
         }
     }
 
+    // Minimum lengths: Chinese = 2/5 characters, English = 4/10 characters
+    private var minNameLength: Int {
+        LocalizationManager.shared.currentLanguage.hasPrefix("zh") ? 2 : 4
+    }
+
+    private var minTaglineLength: Int {
+        LocalizationManager.shared.currentLanguage.hasPrefix("zh") ? 5 : 10
+    }
+
     private var isCurrentStepValid: Bool {
         switch currentStep {
         case 0: return selectedCoordinate != nil
         case 1:
             let trimmedName = siteName.trimmingCharacters(in: .whitespaces)
             let trimmedTagline = siteTagline.trimmingCharacters(in: .whitespaces)
-            return trimmedName.count >= 4 && trimmedTagline.count >= 10
+            return trimmedName.count >= minNameLength && trimmedTagline.count >= minTaglineLength
         case 2:
             return !historyLegend.trimmingCharacters(in: .whitespaces).isEmpty ||
                    !personalExperience.trimmingCharacters(in: .whitespaces).isEmpty ||

@@ -16,7 +16,13 @@
     "%lld/3+" : {
 
     },
+    "%lld/4" : {
+
+    },
     "%lld/9" : {
+
+    },
+    "%lld/10" : {
 
     },
     "%lld秒后重发" : {
@@ -1989,6 +1995,23 @@
         }
       }
     },
+    "sacred_app.site_name_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At least 4 characters"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "至少 2 个汉字"
+          }
+        }
+      }
+    },
     "sacred_app.site_name_placeholder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2002,23 +2025,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "例如：被遗忘的神殿"
-          }
-        }
-      }
-    },
-    "sacred_app.site_name_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "At least 4 characters (2 Chinese characters)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "至少 4 个字符（2 个汉字）"
           }
         }
       }
@@ -2233,13 +2239,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "At least 10 characters (5 Chinese characters). This will appear as the site's tagline."
+            "value" : "At least 10 characters. This will appear as the site's tagline."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "至少 10 个字符（5 个汉字），这将显示为圣迹页面的副标题。"
+            "value" : "至少 5 个汉字，这将显示为圣迹页面的副标题。"
           }
         }
       }
