@@ -19,7 +19,13 @@ struct LeyhomeApp: App {
             UserProfile.self,
             Journey.self,
             MoodRecord.self,
-            SacredSite.self
+            SacredSite.self,
+            Echo.self,
+            VisitedLocation.self,
+            Guide.self,
+            Constellation.self,
+            ConstellationNode.self,
+            Intention.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
