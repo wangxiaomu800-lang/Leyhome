@@ -5,13 +5,16 @@
 //  我的锚点 - 从 SiteSubmissionView 提取，改为锚点专属文案
 //
 //  Created on 2026/02/03.
+//  Updated on 2026/02/03: 添加可见性选项
 //
 
 import SwiftUI
 import CoreLocation
+import Supabase
 
 struct AnchorSubmissionView: View {
     @StateObject private var trackingManager = TrackingManager.shared
+    @EnvironmentObject private var authManager: AuthManager
     @Binding var submitted: Bool
 
     @State private var anchorName = ""
@@ -19,6 +22,7 @@ struct AnchorSubmissionView: View {
     @State private var useCurrentLocation = true
     @State private var latitude = ""
     @State private var longitude = ""
+    @State private var isPublic = false  // 默认仅自己可见
 
     var body: some View {
         ScrollView {
@@ -112,6 +116,38 @@ struct AnchorSubmissionView: View {
                     }
                 }
 
+                // Visibility
+                VStack(alignment: .leading, spacing: LeyhomeTheme.Spacing.sm) {
+                    Text("anchor.visibility.title".localized)
+                        .font(LeyhomeTheme.Fonts.headline)
+                        .foregroundColor(LeyhomeTheme.textPrimary)
+
+                    Toggle(isOn: $isPublic) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("anchor.visibility.public".localized)
+                                .font(LeyhomeTheme.Fonts.body)
+                                .foregroundColor(LeyhomeTheme.textPrimary)
+                            Text("anchor.visibility.public.hint".localized)
+                                .font(LeyhomeTheme.Fonts.caption)
+                                .foregroundColor(LeyhomeTheme.textMuted)
+                        }
+                    }
+                    .tint(LeyhomeTheme.primary)
+
+                    if !isPublic {
+                        HStack(spacing: 4) {
+                            Image(systemName: "lock.fill")
+                                .font(.caption)
+                            Text("anchor.visibility.private.hint".localized)
+                                .font(LeyhomeTheme.Fonts.caption)
+                        }
+                        .foregroundColor(LeyhomeTheme.textMuted)
+                        .padding(LeyhomeTheme.Spacing.sm)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(LeyhomeTheme.CornerRadius.sm)
+                    }
+                }
+
                 // Submit
                 Button(action: submitAnchor) {
                     HStack {
@@ -155,6 +191,10 @@ struct AnchorSubmissionView: View {
         site.continent = "user_submitted"
         site.country = "submission.user_site".localized
         site.creatorId = UUID()
+
+        // 设置可见性和创建者
+        site.isPublic = isPublic
+        site.creatorUserId = authManager.currentUser?.id.uuidString
 
         UserDefaults.standard.set(true, forKey: "has_submitted_site")
 

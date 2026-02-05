@@ -12,9 +12,12 @@
 import SwiftUI
 import MapKit
 import SwiftData
+import CoreLocation
+import Supabase
 
 struct MapView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var authManager: AuthManager
     @StateObject private var trackingManager = TrackingManager.shared
     @StateObject private var themeManager = ThemeManager.shared
 
@@ -23,6 +26,12 @@ struct MapView: View {
 
     /// 从 SwiftData 查询所有心绪记录（按记录时间降序）
     @Query(sort: \MoodRecord.recordTime, order: .reverse) private var moodRecords: [MoodRecord]
+
+    /// 从 SwiftData 查询所有已到访记录
+    @Query private var visitedLocations: [VisitedLocation]
+
+    /// 预置圣迹数据
+    private let allSites = SacredSiteData.loadAllSites()
 
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 39.9042, longitude: 116.4074), // 默认北京
@@ -191,6 +200,12 @@ struct MapView: View {
                     #endif
                 }
             }
+            .onChange(of: trackingManager.currentLocation) { _, newLocation in
+                // 检测是否进入圣迹范围
+                if let location = newLocation {
+                    checkProximityToSites(currentLocation: location)
+                }
+            }
             .onDisappear {
                 // 离开地图页面时停止位置更新（如果没在追踪）
                 if !trackingManager.isTracking {
@@ -236,6 +251,43 @@ struct MapView: View {
         @unknown default:
             break
         }
+    }
+
+    // MARK: - 到访检测
+
+    /// 检测用户是否进入圣迹范围，自动记录到访
+    private func checkProximityToSites(currentLocation: CLLocation) {
+        guard let userId = authManager.currentUser?.id.uuidString else { return }
+
+        for site in allSites {
+            let siteLocation = CLLocation(latitude: site.latitude, longitude: site.longitude)
+            let distance = currentLocation.distance(from: siteLocation)
+            let threshold = EchoDistanceThreshold.threshold(for: site)
+
+            if distance <= threshold {
+                // 检查是否已经记录过
+                let alreadyVisited = visitedLocations.contains { visited in
+                    visited.siteId == site.id && visited.userId == userId
+                }
+
+                if !alreadyVisited {
+                    // 记录到访
+                    let visitedLocation = VisitedLocation(
+                        siteId: site.id,
+                        userId: userId,
+                        distance: distance
+                    )
+                    modelContext.insert(visitedLocation)
+
+                    #if DEBUG
+                    print("📍 记录到访: \(site.name) (距离: \(EchoDistanceThreshold.formatDistance(distance)))")
+                    #endif
+                }
+            }
+        }
+
+        // 保存更改
+        try? modelContext.save()
     }
 
     /// 停止追踪并保存到 SwiftData
@@ -337,5 +389,6 @@ struct ThemePickerView: View {
 
 #Preview {
     MapView()
-        .modelContainer(for: [Journey.self, MoodRecord.self], inMemory: true)
+        .environmentObject(AuthManager())
+        .modelContainer(for: [Journey.self, MoodRecord.self, VisitedLocation.self], inMemory: true)
 }

@@ -3,7 +3,7 @@
 ## 今日目标
 **回响系统 + 意向系统 + 寻迹申请系统**
 
-请阅读 `/Users/xiaomu/Desktop/Leyhome/GDD.md` 第4.3-4.4节（回响系统、意向系统）和 `/Users/xiaomu/Desktop/Leyhome/PRD.md` 第5.3-5.4节及5.2.6节（寻迹申请），然后完成以下任务。
+请阅读 `/Users/xiaomu/Desktop/Leyhome/GDD.md` 第4.3-4.4节（回响系统、意向系统）和 `/Users/xiaomu/Desktop/Leyhome/PRD.md` 第5.3-5.4节及5.2.6节（寻迹申请），然后完成以下任务。如已开发，请跳过
 
 ---
 

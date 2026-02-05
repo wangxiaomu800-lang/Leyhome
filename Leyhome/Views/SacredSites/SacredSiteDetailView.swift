@@ -6,6 +6,7 @@
 //
 //  Created on 2026/01/30.
 //  Updated on 2026/02/03: 向往按钮接入 AspiredSitesManager
+//  Updated on 2026/02/03: Day 7 - 集成回响系统和意向系统
 //
 
 import SwiftUI
@@ -13,7 +14,7 @@ import SwiftUI
 struct SacredSiteDetailView: View {
     let site: SacredSite
     @State private var showJourneyPlanner = false
-    @State private var showIntentionAlert = false
+    @State private var showIntentionSheet = false
     @StateObject private var aspiredManager = AspiredSitesManager.shared
     @Environment(\.dismiss) private var dismiss
 
@@ -56,15 +57,8 @@ struct SacredSiteDetailView: View {
             .sheet(isPresented: $showJourneyPlanner) {
                 JourneyPlannerView(site: site)
             }
-            .alert("intention.aspire".localized, isPresented: $showIntentionAlert) {
-                Button("button.confirm".localized) {
-                    aspiredManager.toggleAspire(site)
-                    site.intentionCount += 1
-                    site.updatedAt = Date()
-                }
-                Button("button.cancel".localized, role: .cancel) {}
-            } message: {
-                Text("intention.confirm_message".localized)
+            .sheet(isPresented: $showIntentionSheet) {
+                IntentionSheet(site: site)
             }
         }
     }
@@ -185,33 +179,10 @@ struct SacredSiteDetailView: View {
         .cornerRadius(LeyhomeTheme.CornerRadius.md)
     }
 
-    // MARK: - Echoes Section (placeholder)
+    // MARK: - Echoes Section
 
     private var echoesSection: some View {
-        VStack(alignment: .leading, spacing: LeyhomeTheme.Spacing.sm) {
-            HStack {
-                Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .foregroundColor(LeyhomeTheme.starlight)
-                Text("sacred.echoes_section".localized)
-                    .font(LeyhomeTheme.Fonts.headline)
-                    .foregroundColor(LeyhomeTheme.textPrimary)
-            }
-
-            VStack(spacing: 8) {
-                Image(systemName: "bubble.left.and.text.bubble.right")
-                    .font(.system(size: 28))
-                    .foregroundColor(LeyhomeTheme.textMuted)
-
-                Text("sacred.echoes_empty".localized)
-                    .font(LeyhomeTheme.Fonts.bodySmall)
-                    .foregroundColor(LeyhomeTheme.textMuted)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, LeyhomeTheme.Spacing.lg)
-        }
-        .padding(LeyhomeTheme.Spacing.md)
-        .background(Color(.systemGray6))
-        .cornerRadius(LeyhomeTheme.CornerRadius.md)
+        EchoesSection(site: site)
     }
 
     // MARK: - Action Buttons
@@ -230,7 +201,7 @@ struct SacredSiteDetailView: View {
                 .frame(maxWidth: .infinity)
             }
 
-            // Aspire button - state-dependent
+            // Aspire button - opens IntentionSheet or removes aspiration
             Button {
                 if aspiredManager.isAspired(site) {
                     // Already aspired: directly toggle off
@@ -238,8 +209,8 @@ struct SacredSiteDetailView: View {
                     site.intentionCount = max(0, site.intentionCount - 1)
                     site.updatedAt = Date()
                 } else {
-                    // Not aspired: show confirmation
-                    showIntentionAlert = true
+                    // Not aspired: show IntentionSheet
+                    showIntentionSheet = true
                 }
             } label: {
                 HStack {

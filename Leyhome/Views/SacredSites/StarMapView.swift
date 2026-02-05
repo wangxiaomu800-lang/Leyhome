@@ -5,19 +5,67 @@
 //  星脉图视图 - 星空背景 + 3D 卫星地图 + 三层圣迹标注
 //
 //  Created on 2026/01/30.
+//  Updated on 2026/02/03: 锚点可见性筛选（公开/私有 + 1km 范围 + 每人2个）
 //
 
 import SwiftUI
 import MapKit
+import CoreLocation
+import Supabase
 
 // MARK: - StarMapView
 
 struct StarMapView: View {
     let sites: [SacredSite]
 
+    @EnvironmentObject private var authManager: AuthManager
+    @StateObject private var trackingManager = TrackingManager.shared
+
     @State private var selectedSite: SacredSite?
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var showSiteDetail = false
+    @State private var hasSetInitialPosition = false
+
+    /// 筛选可见的圣迹（含锚点可见性逻辑）
+    private var visibleSites: [SacredSite] {
+        let currentUserId = authManager.currentUser?.id.uuidString
+
+        // 非锚点圣迹：全部显示
+        let nonAnchors = sites.filter { $0.siteTier != .anchor }
+
+        // 锚点圣迹：根据可见性和距离筛选
+        let anchors = sites.filter { $0.siteTier == .anchor }
+
+        // 自己的所有锚点（无论公开与否）
+        let myAnchors = anchors.filter { $0.creatorUserId == currentUserId }
+
+        // 其他人的公开锚点：需在 1km 范围内，每人最多显示 2 个
+        var nearbyPublicAnchors: [SacredSite] = []
+        if let location = trackingManager.currentLocation {
+            let otherPublicAnchors = anchors.filter { site in
+                site.isPublic && site.creatorUserId != currentUserId
+            }
+
+            // 按距离筛选 1km 范围内
+            let withinRange = otherPublicAnchors.filter { site in
+                let siteLocation = CLLocation(latitude: site.latitude, longitude: site.longitude)
+                return location.distance(from: siteLocation) <= 1000
+            }
+
+            // 按创建者分组，每人最多 2 个
+            var userCounts: [String: Int] = [:]
+            for anchor in withinRange {
+                guard let creatorId = anchor.creatorUserId else { continue }
+                let count = userCounts[creatorId] ?? 0
+                if count < 2 {
+                    nearbyPublicAnchors.append(anchor)
+                    userCounts[creatorId] = count + 1
+                }
+            }
+        }
+
+        return nonAnchors + myAnchors + nearbyPublicAnchors
+    }
 
     var body: some View {
         ZStack {
@@ -26,7 +74,7 @@ struct StarMapView: View {
 
             // 地图层
             Map(position: $cameraPosition) {
-                ForEach(sites) { site in
+                ForEach(visibleSites) { site in
                     Annotation(site.name, coordinate: site.coordinate) {
                         SiteMarker(site: site, isSelected: selectedSite?.id == site.id)
                             .onTapGesture {
@@ -59,6 +107,32 @@ struct StarMapView: View {
                 SacredSiteDetailView(site: site)
             }
         }
+        .onAppear {
+            setInitialCameraPosition()
+        }
+        .onChange(of: trackingManager.currentLocation) { _, _ in
+            // 只在首次获取到位置时设置，避免后续位置更新干扰用户操作
+            if !hasSetInitialPosition {
+                setInitialCameraPosition()
+            }
+        }
+    }
+
+    /// 根据用户当前位置设置初始相机位置，使地球面向用户所在区域
+    private func setInitialCameraPosition() {
+        guard !hasSetInitialPosition else { return }
+        guard let location = trackingManager.currentLocation else { return }
+
+        let userCoordinate = location.coordinate
+        // 距离约 40,000 km，呈现完整地球视角且用户所在区域居中
+        let camera = MapCamera(
+            centerCoordinate: userCoordinate,
+            distance: 40_000_000,
+            heading: 0,
+            pitch: 0
+        )
+        cameraPosition = .camera(camera)
+        hasSetInitialPosition = true
     }
 }
 
@@ -116,14 +190,22 @@ struct SiteMarker: View {
     let isSelected: Bool
 
     @State private var rotation: Double = 0
+    @State private var glowPulse: Double = 0.6
 
     var body: some View {
         ZStack {
+            // 外层光晕（所有层级共享，使标记在地球上清晰可见）
+            Circle()
+                .fill(site.siteTier.color.opacity(0.15))
+                .frame(width: outerGlowSize, height: outerGlowSize)
+                .blur(radius: 6)
+                .opacity(glowPulse)
+
             switch site.siteTier {
             case .primal:
                 // 曼陀罗动态效果
                 MandalaMarker(rotation: rotation, color: site.siteTier.color)
-                    .frame(width: 30, height: 30)
+                    .frame(width: 44, height: 44)
                     .onAppear {
                         withAnimation(.linear(duration: 10).repeatForever(autoreverses: false)) {
                             rotation = 360
@@ -135,25 +217,39 @@ struct SiteMarker: View {
                 ZStack {
                     Circle()
                         .fill(site.siteTier.color)
-                        .frame(width: 18, height: 18)
+                        .frame(width: 24, height: 24)
 
                     Circle()
-                        .stroke(Color.white, lineWidth: 1.5)
-                        .frame(width: 18, height: 18)
+                        .stroke(Color.white, lineWidth: 2)
+                        .frame(width: 24, height: 24)
 
                     Image(systemName: "diamond.fill")
-                        .font(.system(size: 7))
+                        .font(.system(size: 10))
                         .foregroundColor(.white)
                 }
 
             case .anchor:
                 // 涟漪光点
                 RippleMarker(color: site.siteTier.color)
-                    .frame(width: 16, height: 16)
+                    .frame(width: 22, height: 22)
             }
         }
         .scaleEffect(isSelected ? 1.4 : 1.0)
-        .shadow(color: site.siteTier.color.opacity(0.8), radius: isSelected ? 12 : 6)
+        .shadow(color: site.siteTier.color, radius: isSelected ? 16 : 10)
+        .shadow(color: site.siteTier.color.opacity(0.6), radius: isSelected ? 24 : 14)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                glowPulse = 1.0
+            }
+        }
+    }
+
+    private var outerGlowSize: CGFloat {
+        switch site.siteTier {
+        case .primal: return 60
+        case .leyNode: return 44
+        case .anchor: return 36
+        }
     }
 }
 
@@ -169,23 +265,23 @@ struct MandalaMarker: View {
             ForEach(0..<6, id: \.self) { i in
                 Capsule()
                     .fill(color)
-                    .frame(width: 2, height: 12)
-                    .offset(y: -6)
+                    .frame(width: 3, height: 16)
+                    .offset(y: -8)
                     .rotationEffect(.degrees(Double(i) * 60 + rotation))
             }
             // 内圈
             ForEach(0..<6, id: \.self) { i in
                 Capsule()
                     .fill(color.opacity(0.6))
-                    .frame(width: 1.5, height: 8)
-                    .offset(y: -4)
+                    .frame(width: 2, height: 11)
+                    .offset(y: -5.5)
                     .rotationEffect(.degrees(Double(i) * 60 + 30 + rotation * 0.5))
             }
             // 中心
             Circle()
                 .fill(Color.white)
-                .frame(width: 7, height: 7)
-                .shadow(color: color, radius: 3)
+                .frame(width: 10, height: 10)
+                .shadow(color: color, radius: 5)
         }
     }
 }
@@ -200,13 +296,14 @@ struct RippleMarker: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(color, lineWidth: 1.5)
+                .stroke(color, lineWidth: 2)
                 .scaleEffect(scale)
                 .opacity(opacity)
 
             Circle()
                 .fill(color)
-                .frame(width: 6, height: 6)
+                .frame(width: 9, height: 9)
+                .shadow(color: color, radius: 4)
         }
         .onAppear {
             withAnimation(.easeOut(duration: 2.0).repeatForever(autoreverses: false)) {

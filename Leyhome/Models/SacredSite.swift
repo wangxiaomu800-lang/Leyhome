@@ -111,6 +111,10 @@ class SacredSite: Identifiable {
     // MARK: 收藏
     var isFavorite: Bool
 
+    // MARK: 锚点可见性（Tier 3 专用）
+    var isPublic: Bool = true           // 是否公开（默认公开）
+    var creatorUserId: String?          // 创建者用户 ID（与 AuthManager 一致）
+
     // MARK: 时间
     var createdAt: Date
     var updatedAt: Date
