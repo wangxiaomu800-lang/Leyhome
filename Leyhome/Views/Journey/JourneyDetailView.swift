@@ -20,6 +20,8 @@ struct JourneyDetailView: View {
 
     @State private var showDeleteConfirmation = false
     @State private var showAddMoodSheet = false
+    @State private var showRenameAlert = false
+    @State private var newJourneyName = ""
     @State private var selectedMoodRecord: MoodRecord?
     @State private var mapRegion: MKCoordinateRegion
 
@@ -98,6 +100,15 @@ struct JourneyDetailView: View {
                     deleteJourney()
                 }
             }
+            .alert("journey.rename".localized, isPresented: $showRenameAlert) {
+                TextField("journey.name.placeholder".localized, text: $newJourneyName)
+                Button("button.cancel".localized, role: .cancel) {}
+                Button("button.save".localized) {
+                    renameJourney()
+                }
+            } message: {
+                Text("journey.rename.message".localized)
+            }
             .sheet(isPresented: $showAddMoodSheet) {
                 // 补录心绪 - 使用旅程中间点坐标
                 let midCoordinate = journeyMidCoordinate
@@ -141,14 +152,29 @@ struct JourneyDetailView: View {
 
     private var statsSection: some View {
         VStack(spacing: LeyhomeTheme.Spacing.md) {
-            // 出行方式
+            // 出行方式 + 重命名按钮
             HStack {
                 Image(systemName: journey.transportMode.icon)
                     .foregroundColor(journey.transportMode.lineColor)
                 Text(journey.transportMode.localizedName)
                     .font(LeyhomeTheme.Fonts.headline)
                     .foregroundColor(LeyhomeTheme.textPrimary)
+
                 Spacer()
+
+                // 重命名按钮
+                Button {
+                    newJourneyName = journey.name
+                    showRenameAlert = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 12))
+                        Text("journey.rename".localized)
+                            .font(LeyhomeTheme.Fonts.caption)
+                    }
+                    .foregroundColor(LeyhomeTheme.accent)
+                }
             }
 
             Divider()
@@ -320,6 +346,12 @@ struct JourneyDetailView: View {
         modelContext.delete(journey)
         try? modelContext.save()
         dismiss()
+    }
+
+    private func renameJourney() {
+        guard !newJourneyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        journey.name = newJourneyName.trimmingCharacters(in: .whitespacesAndNewlines)
+        try? modelContext.save()
     }
 }
 

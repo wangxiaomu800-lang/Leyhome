@@ -17,7 +17,7 @@ struct LeyhomeApp: App {
     init() {
         #if DEBUG
         // 模拟已订阅状态（测试数据洞察等高级功能）
-        // SubscriptionManager.debugOverridePremium = true
+        SubscriptionManager.debugOverridePremium = true
 
         // 重置引导页（测试引导流程）
         // UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
@@ -35,7 +35,8 @@ struct LeyhomeApp: App {
             Guide.self,
             Constellation.self,
             ConstellationNode.self,
-            Intention.self
+            Intention.self,
+            GuideApplication.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

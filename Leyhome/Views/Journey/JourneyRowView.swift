@@ -22,12 +22,13 @@ struct JourneyRowView: View {
                 .background(journey.transportMode.lineColor)
                 .cornerRadius(LeyhomeTheme.CornerRadius.sm)
 
-            // 中间：时间、距离、时长
+            // 中间：名称、距离、时长
             VStack(alignment: .leading, spacing: 4) {
-                // 起止时间
-                Text(timeRangeText)
+                // 旅程名称
+                Text(displayName)
                     .font(LeyhomeTheme.Fonts.body)
                     .foregroundColor(LeyhomeTheme.textPrimary)
+                    .lineLimit(1)
 
                 // 距离 + 时长
                 HStack(spacing: LeyhomeTheme.Spacing.md) {
@@ -69,20 +70,17 @@ struct JourneyRowView: View {
 
     // MARK: - Formatted Strings
 
-    /// 起止时间文本
-    private var timeRangeText: String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        formatter.dateStyle = .none
-
-        let start = formatter.string(from: journey.startTime)
-
-        if let endTime = journey.endTime {
-            let end = formatter.string(from: endTime)
-            return "\(start) - \(end)"
+    /// 旅程名称（使用自定义名称或默认年月日时分格式）
+    private var displayName: String {
+        // 如果有自定义名称（非默认生成的），使用自定义名称
+        if !journey.name.isEmpty && !journey.name.hasPrefix("Journey ") {
+            return journey.name
         }
 
-        return start
+        // 否则使用年月日时分格式
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy年M月d日 HH:mm"
+        return formatter.string(from: journey.startTime)
     }
 
     /// 格式化距离

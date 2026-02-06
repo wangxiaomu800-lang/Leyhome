@@ -69,18 +69,16 @@ struct MapView: View {
                 )
                 .ignoresSafeArea()
 
-                // 录制状态卡片
-                if trackingManager.isTracking {
-                    RecordingStatusCard(trackingManager: trackingManager)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                } else {
-                    // 占位提示
-                    VStack {
-                        Spacer()
-
+                // 录制状态卡片 / 占位提示（顶部）
+                VStack {
+                    if trackingManager.isTracking {
+                        RecordingStatusCard(trackingManager: trackingManager)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    } else {
+                        // 占位提示 - 顶部安全区下方
                         VStack(spacing: LeyhomeTheme.Spacing.md) {
                             Image(systemName: "map.fill")
-                                .font(.system(size: 48))
+                                .font(.system(size: 36))
                                 .foregroundColor(LeyhomeTheme.primary.opacity(0.6))
 
                             Text("map.recording.placeholder".localized)
@@ -88,14 +86,15 @@ struct MapView: View {
                                 .foregroundColor(LeyhomeTheme.primary.opacity(0.8))
                                 .multilineTextAlignment(.center)
                         }
-                        .padding(LeyhomeTheme.Spacing.lg)
+                        .padding(LeyhomeTheme.Spacing.md)
                         .background(.ultraThinMaterial)
                         .cornerRadius(LeyhomeTheme.CornerRadius.lg)
                         .padding(.horizontal, LeyhomeTheme.Spacing.lg)
-
-                        Spacer()
+                        .padding(.top, LeyhomeTheme.Spacing.xxl + 20)
+                        .transition(.opacity)
                     }
-                    .transition(.opacity)
+
+                    Spacer()
                 }
 
                 // 长按提示 Toast
