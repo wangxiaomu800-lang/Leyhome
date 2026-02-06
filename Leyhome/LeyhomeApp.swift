@@ -14,6 +14,16 @@ struct LeyhomeApp: App {
     @StateObject private var authManager = AuthManager()
     @StateObject private var languageManager = LanguageManager.shared
 
+    init() {
+        #if DEBUG
+        // 模拟已订阅状态（测试数据洞察等高级功能）
+        // SubscriptionManager.debugOverridePremium = true
+
+        // 重置引导页（测试引导流程）
+        // UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        #endif
+    }
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             UserProfile.self,

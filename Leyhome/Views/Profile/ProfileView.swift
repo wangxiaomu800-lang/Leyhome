@@ -15,6 +15,7 @@ struct ProfileView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var showSettings = false
     @State private var showMoodHistory = false
+    @State private var showSubscription = false
 
     @Query(sort: \Journey.startTime, order: .reverse) private var journeys: [Journey]
     @Query(sort: \MoodRecord.recordTime, order: .reverse) private var moodRecords: [MoodRecord]
@@ -108,6 +109,29 @@ struct ProfileView: View {
                             subtitle: "我的旅程成就",
                             action: { /* TODO */ }
                         )
+
+                        Divider()
+                            .padding(.leading, 60)
+
+                        ProfileMenuItem(
+                            icon: "sparkles",
+                            title: "subscription.menu_title".localized,
+                            subtitle: "subscription.menu_subtitle".localized,
+                            action: { showSubscription = true }
+                        )
+
+                        Divider()
+                            .padding(.leading, 60)
+
+                        NavigationLink {
+                            InsightsView()
+                        } label: {
+                            ProfileMenuRow(
+                                icon: "chart.bar.xaxis",
+                                title: "insights.menu_title".localized,
+                                subtitle: "insights.menu_subtitle".localized
+                            )
+                        }
                     }
                     .background(Color.white)
                     .cornerRadius(LeyhomeTheme.CornerRadius.md)
@@ -154,7 +178,51 @@ struct ProfileView: View {
             .navigationDestination(isPresented: $showMoodHistory) {
                 MoodHistoryView()
             }
+            .sheet(isPresented: $showSubscription) {
+                SubscriptionView()
+            }
         }
+    }
+}
+
+// MARK: - 菜单行组件（用于 NavigationLink）
+struct ProfileMenuRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        HStack(spacing: LeyhomeTheme.Spacing.md) {
+            // 图标
+            ZStack {
+                Circle()
+                    .fill(LeyhomeTheme.accent.opacity(0.1))
+                    .frame(width: 44, height: 44)
+
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(LeyhomeTheme.accent)
+            }
+
+            // 文字
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(LeyhomeTheme.Fonts.body)
+                    .foregroundColor(LeyhomeTheme.textPrimary)
+
+                Text(subtitle)
+                    .font(LeyhomeTheme.Fonts.caption)
+                    .foregroundColor(LeyhomeTheme.textSecondary)
+            }
+
+            Spacer()
+
+            // 箭头
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(LeyhomeTheme.textMuted)
+        }
+        .padding(LeyhomeTheme.Spacing.md)
     }
 }
 
