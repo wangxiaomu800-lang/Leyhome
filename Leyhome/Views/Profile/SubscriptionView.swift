@@ -106,7 +106,6 @@ struct SubscriptionView: View {
             BenefitRow(icon: "icloud.and.arrow.up", title: "subscription.benefit.sync".localized)
             BenefitRow(icon: "map.fill", title: "subscription.benefit.routes".localized)
             BenefitRow(icon: "star.fill", title: "subscription.benefit.sites".localized)
-            BenefitRow(icon: "paintbrush.fill", title: "subscription.benefit.themes".localized)
             BenefitRow(icon: "person.2.fill", title: "subscription.benefit.community".localized)
         }
         .padding(LeyhomeTheme.Spacing.md)

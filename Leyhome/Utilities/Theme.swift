@@ -202,6 +202,22 @@ extension Color {
     }
 }
 
+// MARK: - 自定义文本框样式（深色背景适配）
+
+struct CustomTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding()
+            .background(Color.white.opacity(0.1))
+            .foregroundColor(.white)
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
+            )
+    }
+}
+
 // MARK: - View Modifiers for Theme
 extension View {
     func leyhomeCardStyle() -> some View {

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 认证页面 - 登录/注册/找回密码
+/// 认证页面「星图之门」- 深色星空登录体验
 struct AuthView: View {
     // MARK: - State
     @EnvironmentObject var authManager: AuthManager
@@ -27,6 +27,9 @@ struct AuthView: View {
     /// 是否显示忘记密码弹窗
     @State private var showResetPasswordSheet = false
 
+    /// 是否显示邮箱登录/注册表单 Sheet
+    @State private var showEmailSheet = false
+
     /// 找回密码流程步骤（1=发送验证码, 2=验证, 3=设置新密码）
     @State private var resetStep = 1
 
@@ -38,6 +41,10 @@ struct AuthView: View {
     @State private var otpTimer: Timer? = nil
     @State private var resetOtpTimer: Timer? = nil
 
+    /// 入场动画状态
+    @State private var brandAppeared = false
+    @State private var buttonsAppeared = false
+
     // MARK: - Tab枚举
     enum AuthTab {
         case login
@@ -46,42 +53,51 @@ struct AuthView: View {
 
     var body: some View {
         ZStack {
-            // MARK: - 背景渐变
+            // 层1: 深色渐变背景
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color(red: 0.10, green: 0.10, blue: 0.18),
-                    Color(red: 0.09, green: 0.13, blue: 0.24),
-                    Color(red: 0.06, green: 0.06, blue: 0.10)
+                    Color(hex: "0A0A1A"),
+                    Color(hex: "0D1B2A"),
+                    Color(hex: "1A1A2E")
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
             .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    // MARK: - Logo 和标题
-                    logoSection
+            // 层2: 星空粒子
+            StarFieldView()
+                .opacity(0.7)
+                .ignoresSafeArea()
 
-                    // MARK: - Tab 切换
-                    tabSwitcher
+            // 层3: 山脉剪影（底部）
+            MountainSilhouetteView()
+                .ignoresSafeArea()
 
-                    // MARK: - 表单内容
-                    if selectedTab == .login {
-                        loginForm
-                    } else {
-                        registerForm
-                    }
+            // 层4: 主内容
+            VStack(spacing: 0) {
+                Spacer()
 
-                    // MARK: - 第三方登录
-                    thirdPartyLoginSection
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 60)
-                .padding(.bottom, 40)
+                // 品牌区
+                brandSection
+                    .opacity(brandAppeared ? 1 : 0)
+                    .offset(y: brandAppeared ? 0 : 20)
+
+                Spacer()
+
+                // 登录按钮区
+                loginButtonsSection
+                    .opacity(buttonsAppeared ? 1 : 0)
+                    .offset(y: buttonsAppeared ? 0 : 20)
+
+                // 条款区
+                termsSection
+                    .opacity(buttonsAppeared ? 1 : 0)
+                    .padding(.top, LeyhomeTheme.Spacing.lg)
+                    .padding(.bottom, LeyhomeTheme.Spacing.xxl)
             }
 
-            // MARK: - 加载指示器
+            // 层5: 加载指示器
             if authManager.isLoading {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
@@ -90,64 +106,226 @@ struct AuthView: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             }
         }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.8)) {
+                brandAppeared = true
+            }
+            withAnimation(.easeOut(duration: 0.8).delay(0.3)) {
+                buttonsAppeared = true
+            }
+        }
+        .sheet(isPresented: $showEmailSheet) {
+            emailFormSheet
+        }
         .sheet(isPresented: $showResetPasswordSheet) {
             resetPasswordSheet
         }
     }
 
-    // MARK: - Logo Section
-    private var logoSection: some View {
+    // MARK: - Brand Section
+
+    private var brandSection: some View {
         VStack(spacing: 16) {
-            // Logo 圆形背景
+            // 呼吸光晕 Logo
             ZStack {
+                // 外圈光晕
                 Circle()
-                    .fill(
+                    .stroke(
                         LinearGradient(
                             colors: [
-                                LeyhomeTheme.primary,
-                                LeyhomeTheme.primary.opacity(0.7)
+                                LeyhomeTheme.accent.opacity(0.6),
+                                LeyhomeTheme.starlight.opacity(0.3)
                             ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
+                    )
+                    .frame(width: 120, height: 120)
+                    .scaleEffect(brandAppeared ? 1.08 : 1.0)
+                    .opacity(brandAppeared ? 0.5 : 1.0)
+                    .animation(
+                        .easeInOut(duration: LeyhomeTheme.Animation.breath)
+                        .repeatForever(autoreverses: true),
+                        value: brandAppeared
+                    )
+
+                // 内圈
+                Circle()
+                    .fill(LeyhomeTheme.accent.opacity(0.15))
+                    .frame(width: 100, height: 100)
+
+                // Logo 图标
+                Image(systemName: "globe.asia.australia.fill")
+                    .font(.system(size: 44))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [LeyhomeTheme.accent, LeyhomeTheme.starlight],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 80, height: 80)
-                    .shadow(color: LeyhomeTheme.primary.opacity(0.3), radius: 10)
-
-                Image(systemName: "globe.asia.australia.fill")
-                    .font(.system(size: 40))
-                    .foregroundColor(.white)
             }
 
-            // 标题
+            // 中文名
             Text("app.name".localized)
                 .font(.system(size: 32, weight: .bold))
-                .foregroundColor(LeyhomeTheme.textPrimary)
+                .foregroundColor(.white)
 
+            // 英文名
             Text("LEYHOME")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(LeyhomeTheme.textSecondary)
+                .foregroundColor(.white.opacity(0.5))
                 .tracking(3)
 
             // Slogan
             Text("app.slogan".localized)
                 .font(LeyhomeTheme.Fonts.quote)
-                .foregroundColor(LeyhomeTheme.textSecondary.opacity(0.8))
+                .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
-                .padding(.top, 12)
+                .padding(.top, 8)
                 .padding(.horizontal, 32)
         }
-        .padding(.bottom, 20)
+    }
+
+    // MARK: - Login Buttons Section
+
+    private var loginButtonsSection: some View {
+        VStack(spacing: 12) {
+            // 邮件登录按钮
+            Button(action: { showEmailSheet = true }) {
+                HStack {
+                    Image(systemName: "envelope.fill")
+                        .font(.title3)
+                    Text("login.email".localized)
+                        .font(.headline)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(LeyhomeTheme.primary)
+                .cornerRadius(12)
+            }
+
+            // Apple 登录按钮
+            Button(action: handleAppleLogin) {
+                HStack {
+                    Image(systemName: "apple.logo")
+                        .font(.title3)
+                    Text("login.apple".localized)
+                        .font(.headline)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.black)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                )
+            }
+
+            // Google 登录按钮
+            Button(action: handleGoogleLogin) {
+                HStack {
+                    Image(systemName: "globe")
+                        .font(.title3)
+                    Text("login.google".localized)
+                        .font(.headline)
+                }
+                .foregroundColor(.black)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.white)
+                .cornerRadius(12)
+            }
+        }
+        .padding(.horizontal, LeyhomeTheme.Spacing.xl)
+    }
+
+    // MARK: - Terms Section
+
+    private var termsSection: some View {
+        VStack(spacing: LeyhomeTheme.Spacing.xs) {
+            Text("login.agreement".localized)
+                .font(LeyhomeTheme.Fonts.caption)
+                .foregroundColor(.white.opacity(0.5))
+
+            HStack(spacing: LeyhomeTheme.Spacing.sm) {
+                Button(action: {
+                    // 打开服务条款
+                }) {
+                    Text("login.terms_of_service".localized)
+                        .font(LeyhomeTheme.Fonts.caption)
+                        .foregroundColor(LeyhomeTheme.starlight)
+                        .underline()
+                }
+
+                Text("&")
+                    .font(LeyhomeTheme.Fonts.caption)
+                    .foregroundColor(.white.opacity(0.5))
+
+                Button(action: {
+                    // 打开隐私政策
+                }) {
+                    Text("login.privacy_policy".localized)
+                        .font(LeyhomeTheme.Fonts.caption)
+                        .foregroundColor(LeyhomeTheme.starlight)
+                        .underline()
+                }
+            }
+        }
+    }
+
+    // MARK: - Email Form Sheet
+
+    private var emailFormSheet: some View {
+        NavigationStack {
+            ZStack {
+                Color(hex: "0D1B2A")
+                    .ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Tab 切换
+                        tabSwitcher
+
+                        // 表单内容
+                        if selectedTab == .login {
+                            loginForm
+                        } else {
+                            registerForm
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+                    .padding(.bottom, 40)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showEmailSheet = false
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Tab Switcher
     private var tabSwitcher: some View {
         HStack(spacing: 0) {
-            // 登录 Tab
             Button(action: { selectedTab = .login }) {
                 Text("登录")
                     .font(.headline)
-                    .foregroundColor(selectedTab == .login ? .white : LeyhomeTheme.textSecondary)
+                    .foregroundColor(selectedTab == .login ? .white : .white.opacity(0.4))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(
@@ -157,11 +335,10 @@ struct AuthView: View {
                     )
             }
 
-            // 注册 Tab
             Button(action: { selectedTab = .register }) {
                 Text("注册")
                     .font(.headline)
-                    .foregroundColor(selectedTab == .register ? .white : LeyhomeTheme.textSecondary)
+                    .foregroundColor(selectedTab == .register ? .white : .white.opacity(0.4))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(
@@ -171,18 +348,17 @@ struct AuthView: View {
                     )
             }
         }
-        .background(LeyhomeTheme.Background.card)
+        .background(Color.white.opacity(0.08))
         .cornerRadius(8)
     }
 
     // MARK: - 登录表单
     private var loginForm: some View {
         VStack(spacing: 16) {
-            // 邮箱输入框
             VStack(alignment: .leading, spacing: 8) {
                 Text("邮箱")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
 
                 TextField("请输入邮箱", text: $loginEmail)
                     .textFieldStyle(CustomTextFieldStyle())
@@ -191,18 +367,16 @@ struct AuthView: View {
                     .keyboardType(.emailAddress)
             }
 
-            // 密码输入框
             VStack(alignment: .leading, spacing: 8) {
                 Text("密码")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
 
                 SecureField("请输入密码", text: $loginPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.password)
             }
 
-            // 错误提示
             if let error = authManager.errorMessage {
                 Text(error)
                     .font(.caption)
@@ -210,7 +384,6 @@ struct AuthView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            // 登录按钮
             Button(action: handleLogin) {
                 Text("登录")
                     .font(.headline)
@@ -223,8 +396,12 @@ struct AuthView: View {
             .disabled(loginEmail.isEmpty || loginPassword.isEmpty)
             .opacity(loginEmail.isEmpty || loginPassword.isEmpty ? 0.5 : 1.0)
 
-            // 忘记密码链接
-            Button(action: { showResetPasswordSheet = true }) {
+            Button(action: {
+                showEmailSheet = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showResetPasswordSheet = true
+                }
+            }) {
                 Text("忘记密码？")
                     .font(.subheadline)
                     .foregroundColor(LeyhomeTheme.starlight)
@@ -236,12 +413,9 @@ struct AuthView: View {
     // MARK: - 注册表单
     private var registerForm: some View {
         VStack(spacing: 16) {
-            // 根据流程状态显示不同步骤
             if !authManager.otpVerified {
-                // 步骤1和2：发送验证码 → 验证
                 registerStepOneAndTwo
             } else if authManager.needsPasswordSetup {
-                // 步骤3：设置密码
                 registerStepThree
             }
         }
@@ -251,19 +425,16 @@ struct AuthView: View {
     // MARK: - 注册步骤1和2
     private var registerStepOneAndTwo: some View {
         VStack(spacing: 16) {
-            // 邮箱输入框
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("邮箱")
                         .font(.subheadline)
-                        .foregroundColor(LeyhomeTheme.textSecondary)
+                        .foregroundColor(.white.opacity(0.7))
 
                     Spacer()
 
-                    // 如果已发送验证码，显示"修改邮箱"按钮
                     if authManager.otpSent {
                         Button("修改邮箱") {
-                            // 重置注册状态
                             authManager.resetState()
                             registerOTP = ""
                             otpCountdown = 0
@@ -280,12 +451,10 @@ struct AuthView: View {
                     .autocapitalization(.none)
                     .keyboardType(.emailAddress)
                     .onChange(of: registerEmail) { _, _ in
-                        // 邮箱修改后，清除错误信息
                         authManager.errorMessage = nil
                     }
             }
 
-            // 发送验证码按钮
             if !authManager.otpSent {
                 Button(action: handleSendRegisterOTP) {
                     Text("发送验证码")
@@ -300,20 +469,19 @@ struct AuthView: View {
                 .opacity(registerEmail.isEmpty ? 0.5 : 1.0)
             }
 
-            // 验证码输入（发送后显示）
             if authManager.otpSent {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("验证码")
                             .font(.subheadline)
-                            .foregroundColor(LeyhomeTheme.textSecondary)
+                            .foregroundColor(.white.opacity(0.7))
 
                         Spacer()
 
                         if otpCountdown > 0 {
                             Text("\(otpCountdown)秒后重发")
                                 .font(.caption)
-                                .foregroundColor(LeyhomeTheme.textMuted)
+                                .foregroundColor(.white.opacity(0.4))
                         } else {
                             Button("重新发送") {
                                 handleSendRegisterOTP()
@@ -329,7 +497,6 @@ struct AuthView: View {
                         .keyboardType(.numberPad)
                 }
 
-                // 验证按钮
                 Button(action: handleVerifyRegisterOTP) {
                     Text("验证")
                         .font(.headline)
@@ -343,7 +510,6 @@ struct AuthView: View {
                 .opacity(registerOTP.count != 6 ? 0.5 : 1.0)
             }
 
-            // 错误提示
             if let error = authManager.errorMessage {
                 Text(error)
                     .font(.caption)
@@ -356,42 +522,38 @@ struct AuthView: View {
     // MARK: - 注册步骤3：设置密码
     private var registerStepThree: some View {
         VStack(spacing: 16) {
-            // 提示信息
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(LeyhomeTheme.success)
                 Text("验证成功！请设置密码完成注册")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
             }
             .padding()
             .frame(maxWidth: .infinity)
             .background(LeyhomeTheme.success.opacity(0.1))
             .cornerRadius(8)
 
-            // 密码输入框
             VStack(alignment: .leading, spacing: 8) {
                 Text("设置密码")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
 
                 SecureField("请输入密码（至少6位）", text: $registerPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.newPassword)
             }
 
-            // 确认密码输入框
             VStack(alignment: .leading, spacing: 8) {
                 Text("确认密码")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
 
                 SecureField("请再次输入密码", text: $registerConfirmPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.newPassword)
             }
 
-            // 密码强度提示
             if !registerPassword.isEmpty {
                 let validation = authManager.validatePassword(registerPassword)
                 if !validation.isValid, let message = validation.message {
@@ -401,21 +563,18 @@ struct AuthView: View {
                 }
             }
 
-            // 密码不匹配提示
             if !registerConfirmPassword.isEmpty && registerPassword != registerConfirmPassword {
                 Text("两次输入的密码不一致")
                     .font(.caption)
                     .foregroundColor(LeyhomeTheme.danger)
             }
 
-            // 错误提示
             if let error = authManager.errorMessage {
                 Text(error)
                     .font(.caption)
                     .foregroundColor(LeyhomeTheme.danger)
             }
 
-            // 完成注册按钮
             Button(action: handleCompleteRegistration) {
                 Text("完成注册")
                     .font(.headline)
@@ -430,99 +589,24 @@ struct AuthView: View {
         }
     }
 
-    // MARK: - 第三方登录
-    private var thirdPartyLoginSection: some View {
-        VStack(spacing: 16) {
-            // 分隔线
-            HStack {
-                Rectangle()
-                    .fill(LeyhomeTheme.textMuted)
-                    .frame(height: 1)
-
-                Text("或者使用以下方式登录")
-                    .font(.caption)
-                    .foregroundColor(LeyhomeTheme.textMuted)
-                    .padding(.horizontal, 8)
-
-                Rectangle()
-                    .fill(LeyhomeTheme.textMuted)
-                    .frame(height: 1)
-            }
-            .padding(.top, 20)
-
-            // Apple 登录按钮
-            Button(action: handleAppleLogin) {
-                HStack {
-                    Image(systemName: "apple.logo")
-                        .font(.title3)
-                    Text("使用 Apple 登录")
-                        .font(.headline)
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.black)
-                .cornerRadius(12)
-            }
-
-            // Google 登录按钮
-            Button(action: handleGoogleLogin) {
-                HStack {
-                    Image(systemName: "globe")
-                        .font(.title3)
-                    Text("使用 Google 登录")
-                        .font(.headline)
-                }
-                .foregroundColor(.black)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.white)
-                .cornerRadius(12)
-            }
-
-            // 游客登录按钮 (开发测试用)
-            Button(action: handleGuestLogin) {
-                HStack {
-                    Image(systemName: "person.fill.questionmark")
-                        .font(.title3)
-                    Text("login.guest".localized)
-                        .font(.headline)
-                }
-                .foregroundColor(LeyhomeTheme.primary)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.9))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(LeyhomeTheme.accent, lineWidth: 1.5)
-                        )
-                )
-            }
-        }
-    }
-
     // MARK: - 找回密码弹窗
     private var resetPasswordSheet: some View {
         NavigationView {
             ZStack {
-                LeyhomeTheme.background
+                Color(hex: "0D1B2A")
                     .ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 20) {
-                        // 步骤指示器
                         stepIndicator(currentStep: resetStep, totalSteps: 3)
 
-                        // 根据步骤显示不同内容
                         switch resetStep {
                         case 1:
                             resetStepOne
                         case 2:
                             resetStepTwo
                         case 3:
-                            resetStepThree
+                            resetStepThreeView
                         default:
                             EmptyView()
                         }
@@ -538,7 +622,7 @@ struct AuthView: View {
                         showResetPasswordSheet = false
                         resetResetPasswordFlow()
                     }
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
                 }
             }
         }
@@ -547,11 +631,10 @@ struct AuthView: View {
     // MARK: - 找回密码步骤1
     private var resetStepOne: some View {
         VStack(spacing: 16) {
-            // 邮箱输入
             VStack(alignment: .leading, spacing: 8) {
                 Text("邮箱")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
 
                 TextField("请输入注册邮箱", text: $resetEmail)
                     .textFieldStyle(CustomTextFieldStyle())
@@ -583,19 +666,18 @@ struct AuthView: View {
     // MARK: - 找回密码步骤2
     private var resetStepTwo: some View {
         VStack(spacing: 16) {
-            // 验证码输入
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("验证码")
                         .font(.subheadline)
-                        .foregroundColor(LeyhomeTheme.textSecondary)
+                        .foregroundColor(.white.opacity(0.7))
 
                     Spacer()
 
                     if resetOtpCountdown > 0 {
                         Text("\(resetOtpCountdown)秒后重发")
                             .font(.caption)
-                            .foregroundColor(LeyhomeTheme.textMuted)
+                            .foregroundColor(.white.opacity(0.4))
                     } else {
                         Button("重新发送") {
                             resetStep = 1
@@ -632,44 +714,40 @@ struct AuthView: View {
     }
 
     // MARK: - 找回密码步骤3
-    private var resetStepThree: some View {
+    private var resetStepThreeView: some View {
         VStack(spacing: 16) {
-            // 成功提示
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(LeyhomeTheme.success)
                 Text("验证成功！请设置新密码")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
             }
             .padding()
             .frame(maxWidth: .infinity)
             .background(LeyhomeTheme.success.opacity(0.1))
             .cornerRadius(8)
 
-            // 新密码输入
             VStack(alignment: .leading, spacing: 8) {
                 Text("新密码")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
 
                 SecureField("请输入新密码（至少6位）", text: $resetPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.newPassword)
             }
 
-            // 确认密码
             VStack(alignment: .leading, spacing: 8) {
                 Text("确认密码")
                     .font(.subheadline)
-                    .foregroundColor(LeyhomeTheme.textSecondary)
+                    .foregroundColor(.white.opacity(0.7))
 
                 SecureField("请再次输入新密码", text: $resetConfirmPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.newPassword)
             }
 
-            // 密码不匹配提示
             if !resetConfirmPassword.isEmpty && resetPassword != resetConfirmPassword {
                 Text("两次输入的密码不一致")
                     .font(.caption)
@@ -701,7 +779,7 @@ struct AuthView: View {
         HStack(spacing: 8) {
             ForEach(1...totalSteps, id: \.self) { step in
                 Circle()
-                    .fill(step <= currentStep ? LeyhomeTheme.primary : LeyhomeTheme.textMuted)
+                    .fill(step <= currentStep ? LeyhomeTheme.primary : Color.white.opacity(0.2))
                     .frame(width: 10, height: 10)
             }
         }
@@ -780,7 +858,6 @@ struct AuthView: View {
 
     /// Apple 登录（占位）
     private func handleAppleLogin() {
-        // TODO: 实现 Apple 登录
         authManager.errorMessage = "Apple 登录即将开放"
     }
 
@@ -790,12 +867,6 @@ struct AuthView: View {
         Task {
             await authManager.signInWithGoogle()
         }
-    }
-
-    /// 游客登录（开发测试）
-    private func handleGuestLogin() {
-        print("👤 用户点击游客登录按钮")
-        authManager.signInAsGuest()
     }
 
     // MARK: - Helper Functions
@@ -852,21 +923,6 @@ struct AuthView: View {
         resetOtpTimer?.invalidate()
         resetOtpCountdown = 0
         authManager.resetState()
-    }
-}
-
-// MARK: - 自定义文本框样式
-struct CustomTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .padding()
-            .background(LeyhomeTheme.Background.card)
-            .foregroundColor(LeyhomeTheme.textPrimary)
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(LeyhomeTheme.textMuted.opacity(0.3), lineWidth: 1)
-            )
     }
 }
 

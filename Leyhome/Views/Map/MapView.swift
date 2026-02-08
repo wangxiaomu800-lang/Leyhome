@@ -160,7 +160,7 @@ struct MapView: View {
             }
             .sheet(isPresented: $showThemePicker) {
                 ThemePickerView(themeManager: themeManager)
-                    .presentationDetents([.medium])
+                    .presentationDetents([.height(200)])
             }
             .sheet(isPresented: $showMoodCreationSheet) {
                 if let coordinate = longPressCoordinate {
@@ -342,23 +342,9 @@ struct ThemePickerView: View {
                                 .foregroundColor(themeManager.currentTheme == theme ? LeyhomeTheme.accent : LeyhomeTheme.textSecondary)
                                 .frame(width: 32)
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack {
-                                    Text(theme.localizedName)
-                                        .font(LeyhomeTheme.Fonts.body)
-                                        .foregroundColor(LeyhomeTheme.textPrimary)
-
-                                    if theme.isPremium {
-                                        Text("map.theme.premium".localized)
-                                            .font(LeyhomeTheme.Fonts.caption)
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 2)
-                                            .background(LeyhomeTheme.accent)
-                                            .cornerRadius(4)
-                                    }
-                                }
-                            }
+                            Text(theme.localizedName)
+                                .font(LeyhomeTheme.Fonts.body)
+                                .foregroundColor(LeyhomeTheme.textPrimary)
 
                             Spacer()
 

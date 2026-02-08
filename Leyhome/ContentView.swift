@@ -17,7 +17,7 @@ struct ContentView: View {
             if authManager.isAuthenticated {
                 MainTabView()
             } else {
-                LoginView()
+                AuthView()
             }
         }
         .animation(.easeInOut(duration: LeyhomeTheme.Animation.normal), value: authManager.isAuthenticated)
