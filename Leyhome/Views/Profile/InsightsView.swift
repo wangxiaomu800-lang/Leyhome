@@ -10,6 +10,7 @@
 import SwiftUI
 import SwiftData
 import Charts
+import Supabase
 
 // MARK: - 统计数据结构
 
@@ -33,9 +34,19 @@ struct WeekdayActivity: Identifiable {
 // MARK: - InsightsView
 
 struct InsightsView: View {
+    @EnvironmentObject private var authManager: AuthManager
     @StateObject private var subscriptionManager = SubscriptionManager.shared
-    @Query(sort: \Journey.startTime, order: .reverse) private var journeys: [Journey]
-    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var moodRecords: [MoodRecord]
+    @Query(sort: \Journey.startTime, order: .reverse) private var allJourneys: [Journey]
+    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
+
+    private var journeys: [Journey] {
+        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
+        return allJourneys.filter { $0.userID == uid }
+    }
+    private var moodRecords: [MoodRecord] {
+        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
+        return allMoodRecords.filter { $0.userID == uid }
+    }
 
     @State private var stats = UserStats()
 

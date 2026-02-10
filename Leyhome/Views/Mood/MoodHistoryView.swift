@@ -9,11 +9,18 @@
 
 import SwiftUI
 import SwiftData
+import Supabase
 
 /// 心绪历史回顾视图
 struct MoodHistoryView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var moodRecords: [MoodRecord]
+    @EnvironmentObject private var authManager: AuthManager
+    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
+
+    private var moodRecords: [MoodRecord] {
+        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
+        return allMoodRecords.filter { $0.userID == uid }
+    }
 
     @State private var selectedRecord: MoodRecord?
 

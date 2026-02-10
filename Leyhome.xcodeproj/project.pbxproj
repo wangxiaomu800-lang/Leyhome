@@ -18,9 +18,22 @@
 		F9F951B62F2635EB0082A04D /* Leyhome.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Leyhome.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F9F951B92F2635EB0082A04D /* Exceptions for "Leyhome" folder in "Leyhome" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F9F951B52F2635EB0082A04D /* Leyhome */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F9F951B82F2635EB0082A04D /* Leyhome */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F9F951B92F2635EB0082A04D /* Exceptions for "Leyhome" folder in "Leyhome" target */,
+			);
 			path = Leyhome;
 			sourceTree = "<group>";
 		};
@@ -279,6 +292,7 @@
 				DEVELOPMENT_TEAM = TJ882MBQ4J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Leyhome/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "地脉归途需要访问您的位置来记录行走轨迹，绘制专属于您的心灵地图。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -313,6 +327,7 @@
 				DEVELOPMENT_TEAM = TJ882MBQ4J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Leyhome/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "地脉归途需要访问您的位置来记录行走轨迹，绘制专属于您的心灵地图。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

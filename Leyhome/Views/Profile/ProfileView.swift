@@ -18,8 +18,17 @@ struct ProfileView: View {
     @State private var showMoodHistory = false
     @State private var showSubscription = false
 
-    @Query(sort: \Journey.startTime, order: .reverse) private var journeys: [Journey]
-    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var moodRecords: [MoodRecord]
+    @Query(sort: \Journey.startTime, order: .reverse) private var allJourneys: [Journey]
+    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
+
+    private var journeys: [Journey] {
+        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
+        return allJourneys.filter { $0.userID == uid }
+    }
+    private var moodRecords: [MoodRecord] {
+        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
+        return allMoodRecords.filter { $0.userID == uid }
+    }
 
     var body: some View {
         NavigationStack {

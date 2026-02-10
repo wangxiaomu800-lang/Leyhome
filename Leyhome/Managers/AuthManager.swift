@@ -337,7 +337,7 @@ class AuthManager: ObservableObject {
             print("📱 获取到根视图控制器")
 
             // 步骤2: 配置 Google Sign-In
-            let clientID = "290445589630-5qbt51ldu870f84c3i2s6594cibg2g7r.apps.googleusercontent.com"
+            let clientID = "192755478173-soqde8v6080c0pe55doh8mqv2d3iemh2.apps.googleusercontent.com"
             let config = GIDConfiguration(clientID: clientID)
             GIDSignIn.sharedInstance.configuration = config
 

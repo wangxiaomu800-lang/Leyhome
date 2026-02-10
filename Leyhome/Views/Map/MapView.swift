@@ -22,10 +22,19 @@ struct MapView: View {
     @StateObject private var themeManager = ThemeManager.shared
 
     /// 从 SwiftData 查询所有已保存的旅程（按开始时间降序）
-    @Query(sort: \Journey.startTime, order: .reverse) private var journeys: [Journey]
+    @Query(sort: \Journey.startTime, order: .reverse) private var allJourneys: [Journey]
 
     /// 从 SwiftData 查询所有心绪记录（按记录时间降序）
-    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var moodRecords: [MoodRecord]
+    @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
+
+    private var journeys: [Journey] {
+        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
+        return allJourneys.filter { $0.userID == uid }
+    }
+    private var moodRecords: [MoodRecord] {
+        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
+        return allMoodRecords.filter { $0.userID == uid }
+    }
 
     /// 从 SwiftData 查询所有已到访记录
     @Query private var visitedLocations: [VisitedLocation]
@@ -291,7 +300,8 @@ struct MapView: View {
 
     /// 停止追踪并保存到 SwiftData
     private func stopAndSaveTracking() {
-        guard let journey = trackingManager.stopTracking() else {
+        let userID = authManager.currentUser?.id.uuidString ?? ""
+        guard let journey = trackingManager.stopTracking(userID: userID) else {
             print("⚠️ 停止追踪失败：无法创建 Journey 对象")
             return
         }
@@ -308,7 +318,7 @@ struct MapView: View {
             // 回写 journeyID 到关联的 MoodRecord
             let journeyID = journey.id
             let moodIDs = trackingMoodRecordIDs
-            for record in moodRecords where moodIDs.contains(record.id) {
+            for record in allMoodRecords where moodIDs.contains(record.id) {
                 record.journeyID = journeyID
             }
             try modelContext.save()

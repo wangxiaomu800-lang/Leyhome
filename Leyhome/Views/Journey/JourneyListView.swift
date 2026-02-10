@@ -9,10 +9,17 @@
 
 import SwiftUI
 import SwiftData
+import Supabase
 
 struct JourneyListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Journey.startTime, order: .reverse) private var journeys: [Journey]
+    @EnvironmentObject private var authManager: AuthManager
+    @Query(sort: \Journey.startTime, order: .reverse) private var allJourneys: [Journey]
+
+    private var journeys: [Journey] {
+        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
+        return allJourneys.filter { $0.userID == uid }
+    }
 
     @State private var selectedJourney: Journey?
 

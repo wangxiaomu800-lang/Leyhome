@@ -179,7 +179,7 @@ class TrackingManager: NSObject, ObservableObject {
     }
 
     // MARK: - 停止追踪
-    func stopTracking() -> Journey? {
+    func stopTracking(userID: String = "") -> Journey? {
         guard isTracking else {
             print("⚠️ stopTracking: 当前未在追踪状态")
             return nil
@@ -209,7 +209,7 @@ class TrackingManager: NSObject, ObservableObject {
 
         // 创建 Journey 对象
         let journey = Journey(
-            userID: "", // 需要外部传入
+            userID: userID,
             name: "Journey_\(Date().formatted())",
             startTime: startTime,
             endTime: Date(),
