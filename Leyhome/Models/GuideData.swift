@@ -21,7 +21,8 @@ struct GuideData {
             "bioZh": "二十年山野徒步经验，致力于将正念冥想与户外行走相结合。相信每一步都是与自己的对话，每一座山都是内心的投影。",
             "bioEn": "Twenty years of mountain hiking experience, dedicated to combining mindfulness meditation with outdoor walking. Believes every step is a dialogue with oneself, every mountain a reflection of the inner world.",
             "avatarUrl": "https://example.com/guide1.jpg",
-            "tags": ["正念", "徒步", "山野"]
+            "tagsZh": ["正念", "徒步", "山野"],
+            "tagsEn": ["Mindfulness", "Hiking", "Wilderness"]
         ],
         [
             "name": "苏晚",
@@ -30,7 +31,8 @@ struct GuideData {
             "bioZh": "用镜头捕捉城市的诗意角落，擅长在喧嚣中发现宁静。她的每一次漫步都是一次寻找美的旅程。",
             "bioEn": "Capturing poetic corners of cities through her lens, skilled at finding tranquility in chaos. Every stroll she takes is a journey of seeking beauty.",
             "avatarUrl": "https://example.com/guide2.jpg",
-            "tags": ["城市", "摄影", "慢生活"]
+            "tagsZh": ["城市", "摄影", "慢生活"],
+            "tagsEn": ["Urban", "Photography", "Slow Life"]
         ],
         [
             "name": "云归",
@@ -39,7 +41,8 @@ struct GuideData {
             "bioZh": "研究中国古代驿道与茶马古道多年，用诗歌记录行走中的感悟。每一条古道都是前人留下的密语，等待我们去破译。",
             "bioEn": "Years of research on ancient Chinese postal roads and tea-horse trails, recording walking insights through poetry. Every ancient trail is a cipher left by our ancestors, waiting to be decoded.",
             "avatarUrl": "https://example.com/guide3.jpg",
-            "tags": ["古道", "诗歌", "历史"]
+            "tagsZh": ["古道", "诗歌", "历史"],
+            "tagsEn": ["Ancient Trails", "Poetry", "History"]
         ]
     ]
 
@@ -159,7 +162,8 @@ struct GuideData {
             guide.bioZh = data["bioZh"] as? String ?? ""
             guide.bioEn = data["bioEn"] as? String ?? ""
             guide.avatarUrl = data["avatarUrl"] as? String
-            guide.tags = data["tags"] as? [String] ?? []
+            guide.tagsZh = data["tagsZh"] as? [String] ?? []
+            guide.tagsEn = data["tagsEn"] as? [String] ?? []
             return guide
         }
     }

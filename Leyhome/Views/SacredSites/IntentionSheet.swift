@@ -224,6 +224,9 @@ struct IntentionSheet: View {
     private func monthName(_ month: Int) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM"
+        // 根据 App 语言设置 locale，而非系统 locale
+        let lang = LocalizationManager.shared.currentLanguage
+        formatter.locale = Locale(identifier: lang.hasPrefix("zh") ? "zh-Hans" : "en")
         var components = DateComponents()
         components.month = month
         if let date = Calendar.current.date(from: components) {

@@ -21,7 +21,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .system:
-            return "跟随系统"
+            return "language.follow_system".localized
         case .chinese:
             return "简体中文"
         case .english:
@@ -40,6 +40,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
             return "en"
         }
     }
+
 }
 
 /// 语言管理器

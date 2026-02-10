@@ -24,11 +24,11 @@ struct SettingsView: View {
                 ScrollView {
                     VStack(spacing: LeyhomeTheme.Spacing.lg) {
                         // 账号设置
-                        SettingsSection(title: "账号") {
+                        SettingsSection(title: "settings.account".localized) {
                             SettingsRow(
                                 icon: "person.circle",
-                                title: "账号信息",
-                                value: authManager.currentUser?.email ?? "未登录"
+                                title: "settings.account_info".localized,
+                                value: authManager.currentUser?.email ?? "settings.not_logged_in".localized
                             )
 
                             Divider()
@@ -36,13 +36,13 @@ struct SettingsView: View {
 
                             SettingsRow(
                                 icon: "lock",
-                                title: "修改密码",
+                                title: "settings.change_password".localized,
                                 showChevron: true
                             )
                         }
 
                         // 通用设置
-                        SettingsSection(title: "通用") {
+                        SettingsSection(title: "settings.general".localized) {
                             // 语言选择
                             HStack(spacing: LeyhomeTheme.Spacing.md) {
                                 ZStack {
@@ -55,7 +55,7 @@ struct SettingsView: View {
                                         .foregroundColor(LeyhomeTheme.accent)
                                 }
 
-                                Text("语言")
+                                Text("settings.language".localized)
                                     .font(LeyhomeTheme.Fonts.body)
                                     .foregroundColor(LeyhomeTheme.textPrimary)
 
@@ -76,8 +76,8 @@ struct SettingsView: View {
 
                             SettingsRow(
                                 icon: "bell",
-                                title: "通知",
-                                subtitle: "推送通知设置",
+                                title: "settings.notifications".localized,
+                                subtitle: "settings.notifications_subtitle".localized,
                                 showChevron: true
                             )
 
@@ -86,17 +86,17 @@ struct SettingsView: View {
 
                             SettingsRow(
                                 icon: "location",
-                                title: "定位服务",
-                                subtitle: "位置权限管理",
+                                title: "settings.location_services".localized,
+                                subtitle: "settings.location_subtitle".localized,
                                 showChevron: true
                             )
                         }
 
                         // 隐私与安全
-                        SettingsSection(title: "隐私与安全") {
+                        SettingsSection(title: "settings.privacy_security".localized) {
                             SettingsRow(
                                 icon: "hand.raised",
-                                title: "隐私政策",
+                                title: "settings.privacy_policy".localized,
                                 showChevron: true
                             )
 
@@ -105,16 +105,16 @@ struct SettingsView: View {
 
                             SettingsRow(
                                 icon: "doc.text",
-                                title: "服务条款",
+                                title: "settings.terms_of_service".localized,
                                 showChevron: true
                             )
                         }
 
                         // 关于
-                        SettingsSection(title: "关于") {
+                        SettingsSection(title: "settings.about".localized) {
                             SettingsRow(
                                 icon: "info.circle",
-                                title: "版本",
+                                title: "settings.version".localized,
                                 value: "1.0.0"
                             )
 
@@ -123,7 +123,7 @@ struct SettingsView: View {
 
                             SettingsRow(
                                 icon: "questionmark.circle",
-                                title: "帮助与反馈",
+                                title: "settings.help_feedback".localized,
                                 showChevron: true
                             )
                         }
@@ -134,16 +134,17 @@ struct SettingsView: View {
                     .padding(.top, LeyhomeTheme.Spacing.md)
                 }
             }
-            .navigationTitle("设置")
+            .navigationTitle("settings.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("完成") {
+                    Button("settings.done".localized) {
                         dismiss()
                     }
                     .foregroundColor(LeyhomeTheme.accent)
                 }
             }
+            .id(languageManager.currentLanguage)
         }
     }
 }

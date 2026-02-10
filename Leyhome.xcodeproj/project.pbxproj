@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F94ABD062F39F612004B93D2 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F94ABD052F39F612004B93D2 /* Localizable.xcstrings */; };
 		F97497D52F28F70000855190 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F97497D42F28F70000855190 /* GoogleSignIn */; };
 		F97497D72F28F70000855190 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F97497D62F28F70000855190 /* GoogleSignInSwift */; };
 		F9BE9E032F278A5C0004F1B0 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F9BE9E022F278A5C0004F1B0 /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F94ABD052F39F612004B93D2 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		F9F951B62F2635EB0082A04D /* Leyhome.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Leyhome.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -41,6 +43,7 @@
 		F9F951AD2F2635EB0082A04D = {
 			isa = PBXGroup;
 			children = (
+				F94ABD052F39F612004B93D2 /* Localizable.xcstrings */,
 				F9F951B82F2635EB0082A04D /* Leyhome */,
 				F9F951B72F2635EB0082A04D /* Products */,
 			);
@@ -98,11 +101,12 @@
 				};
 			};
 			buildConfigurationList = F9F951B12F2635EB0082A04D /* Build configuration list for PBXProject "Leyhome" */;
-			developmentRegion = en;
+			developmentRegion = "zh-Hans";
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = F9F951AD2F2635EB0082A04D;
 			minimizedProjectReferenceProxies = 1;
@@ -125,6 +129,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F94ABD062F39F612004B93D2 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,6 +206,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -258,6 +264,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

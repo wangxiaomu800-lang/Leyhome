@@ -10,6 +10,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @StateObject private var languageManager = LanguageManager.shared
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -49,6 +50,7 @@ struct MainTabView: View {
                 .tag(4)
         }
         .tint(LeyhomeTheme.primary)
+        .id(languageManager.currentLanguage)
     }
 }
 

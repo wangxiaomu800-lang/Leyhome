@@ -13,6 +13,7 @@ import SwiftData
 
 struct ProfileView: View {
     @EnvironmentObject var authManager: AuthManager
+    @StateObject private var languageManager = LanguageManager.shared
     @State private var showSettings = false
     @State private var showMoodHistory = false
     @State private var showSubscription = false
@@ -58,16 +59,16 @@ struct ProfileView: View {
 
                     // 统计卡片
                     HStack(spacing: LeyhomeTheme.Spacing.md) {
-                        ProfileStatCard(title: "轨迹", value: "\(journeys.count)", icon: "map")
+                        ProfileStatCard(title: "profile.stat.tracks".localized, value: "\(journeys.count)", icon: "map")
 
                         Button {
                             showMoodHistory = true
                         } label: {
-                            ProfileStatCard(title: "心绪", value: "\(moodRecords.count)", icon: "heart")
+                            ProfileStatCard(title: "profile.stat.moods".localized, value: "\(moodRecords.count)", icon: "heart")
                         }
                         .buttonStyle(.plain)
 
-                        ProfileStatCard(title: "圣迹", value: "0", icon: "star")
+                        ProfileStatCard(title: "profile.stat.sacred_sites".localized, value: "0", icon: "star")
                     }
                     .padding(.horizontal, LeyhomeTheme.Spacing.lg)
 
@@ -75,8 +76,8 @@ struct ProfileView: View {
                     VStack(spacing: 0) {
                         ProfileMenuItem(
                             icon: "gear",
-                            title: "设置",
-                            subtitle: "账号与偏好设置",
+                            title: "profile.menu.settings".localized,
+                            subtitle: "profile.menu.settings_subtitle".localized,
                             action: { showSettings = true }
                         )
 
@@ -95,8 +96,8 @@ struct ProfileView: View {
 
                         ProfileMenuItem(
                             icon: "clock.arrow.circlepath",
-                            title: "历史记录",
-                            subtitle: "查看我的足迹",
+                            title: "profile.menu.history".localized,
+                            subtitle: "profile.menu.history_subtitle".localized,
                             action: { /* TODO */ }
                         )
 
@@ -105,8 +106,8 @@ struct ProfileView: View {
 
                         ProfileMenuItem(
                             icon: "trophy",
-                            title: "成就",
-                            subtitle: "我的旅程成就",
+                            title: "profile.menu.achievements".localized,
+                            subtitle: "profile.menu.achievements_subtitle".localized,
                             action: { /* TODO */ }
                         )
 
@@ -182,6 +183,7 @@ struct ProfileView: View {
                 SubscriptionView()
             }
         }
+        .id(languageManager.currentLanguage)
     }
 }
 

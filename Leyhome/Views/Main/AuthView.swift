@@ -323,7 +323,7 @@ struct AuthView: View {
     private var tabSwitcher: some View {
         HStack(spacing: 0) {
             Button(action: { selectedTab = .login }) {
-                Text("登录")
+                Text("auth.tab.login".localized)
                     .font(.headline)
                     .foregroundColor(selectedTab == .login ? .white : .white.opacity(0.4))
                     .frame(maxWidth: .infinity)
@@ -336,7 +336,7 @@ struct AuthView: View {
             }
 
             Button(action: { selectedTab = .register }) {
-                Text("注册")
+                Text("auth.tab.register".localized)
                     .font(.headline)
                     .foregroundColor(selectedTab == .register ? .white : .white.opacity(0.4))
                     .frame(maxWidth: .infinity)
@@ -356,11 +356,11 @@ struct AuthView: View {
     private var loginForm: some View {
         VStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("邮箱")
+                Text("auth.email".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
 
-                TextField("请输入邮箱", text: $loginEmail)
+                TextField("auth.email_placeholder".localized, text: $loginEmail)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.emailAddress)
                     .autocapitalization(.none)
@@ -368,11 +368,11 @@ struct AuthView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("密码")
+                Text("auth.password".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
 
-                SecureField("请输入密码", text: $loginPassword)
+                SecureField("auth.password_placeholder".localized, text: $loginPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.password)
             }
@@ -385,7 +385,7 @@ struct AuthView: View {
             }
 
             Button(action: handleLogin) {
-                Text("登录")
+                Text("auth.tab.login".localized)
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -402,7 +402,7 @@ struct AuthView: View {
                     showResetPasswordSheet = true
                 }
             }) {
-                Text("忘记密码？")
+                Text("auth.forgot_password".localized)
                     .font(.subheadline)
                     .foregroundColor(LeyhomeTheme.starlight)
             }
@@ -427,14 +427,14 @@ struct AuthView: View {
         VStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("邮箱")
+                    Text("auth.email".localized)
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.7))
 
                     Spacer()
 
                     if authManager.otpSent {
-                        Button("修改邮箱") {
+                        Button("auth.change_email".localized) {
                             authManager.resetState()
                             registerOTP = ""
                             otpCountdown = 0
@@ -445,7 +445,7 @@ struct AuthView: View {
                     }
                 }
 
-                TextField("请输入邮箱", text: $registerEmail)
+                TextField("auth.email_placeholder".localized, text: $registerEmail)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.emailAddress)
                     .autocapitalization(.none)
@@ -457,7 +457,7 @@ struct AuthView: View {
 
             if !authManager.otpSent {
                 Button(action: handleSendRegisterOTP) {
-                    Text("发送验证码")
+                    Text("auth.send_otp".localized)
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -472,18 +472,18 @@ struct AuthView: View {
             if authManager.otpSent {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("验证码")
+                        Text("auth.otp".localized)
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.7))
 
                         Spacer()
 
                         if otpCountdown > 0 {
-                            Text("\(otpCountdown)秒后重发")
+                            Text("auth.otp_countdown".localized(with: otpCountdown))
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.4))
                         } else {
-                            Button("重新发送") {
+                            Button("auth.resend".localized) {
                                 handleSendRegisterOTP()
                             }
                             .font(.caption)
@@ -491,14 +491,14 @@ struct AuthView: View {
                         }
                     }
 
-                    TextField("请输入6位验证码", text: $registerOTP)
+                    TextField("auth.otp_placeholder".localized, text: $registerOTP)
                         .textFieldStyle(CustomTextFieldStyle())
                         .textContentType(.oneTimeCode)
                         .keyboardType(.numberPad)
                 }
 
                 Button(action: handleVerifyRegisterOTP) {
-                    Text("验证")
+                    Text("auth.verify".localized)
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -525,7 +525,7 @@ struct AuthView: View {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(LeyhomeTheme.success)
-                Text("验证成功！请设置密码完成注册")
+                Text("auth.verify_success_set_password".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
             }
@@ -535,21 +535,21 @@ struct AuthView: View {
             .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("设置密码")
+                Text("auth.set_password".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
 
-                SecureField("请输入密码（至少6位）", text: $registerPassword)
+                SecureField("auth.password_min6_placeholder".localized, text: $registerPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.newPassword)
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("确认密码")
+                Text("auth.confirm_password".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
 
-                SecureField("请再次输入密码", text: $registerConfirmPassword)
+                SecureField("auth.confirm_password_placeholder".localized, text: $registerConfirmPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.newPassword)
             }
@@ -564,7 +564,7 @@ struct AuthView: View {
             }
 
             if !registerConfirmPassword.isEmpty && registerPassword != registerConfirmPassword {
-                Text("两次输入的密码不一致")
+                Text("auth.password_mismatch".localized)
                     .font(.caption)
                     .foregroundColor(LeyhomeTheme.danger)
             }
@@ -576,7 +576,7 @@ struct AuthView: View {
             }
 
             Button(action: handleCompleteRegistration) {
-                Text("完成注册")
+                Text("auth.complete_register".localized)
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -614,11 +614,11 @@ struct AuthView: View {
                     .padding(24)
                 }
             }
-            .navigationTitle("找回密码")
+            .navigationTitle("auth.reset_password_title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("关闭") {
+                    Button("auth.close".localized) {
                         showResetPasswordSheet = false
                         resetResetPasswordFlow()
                     }
@@ -632,11 +632,11 @@ struct AuthView: View {
     private var resetStepOne: some View {
         VStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("邮箱")
+                Text("auth.email".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
 
-                TextField("请输入注册邮箱", text: $resetEmail)
+                TextField("auth.reset_email_placeholder".localized, text: $resetEmail)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.emailAddress)
                     .autocapitalization(.none)
@@ -650,7 +650,7 @@ struct AuthView: View {
             }
 
             Button(action: handleSendResetOTP) {
-                Text("发送验证码")
+                Text("auth.send_otp".localized)
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -668,18 +668,18 @@ struct AuthView: View {
         VStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("验证码")
+                    Text("auth.otp".localized)
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.7))
 
                     Spacer()
 
                     if resetOtpCountdown > 0 {
-                        Text("\(resetOtpCountdown)秒后重发")
+                        Text("auth.otp_countdown".localized(with: resetOtpCountdown))
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.4))
                     } else {
-                        Button("重新发送") {
+                        Button("auth.resend".localized) {
                             resetStep = 1
                         }
                         .font(.caption)
@@ -687,7 +687,7 @@ struct AuthView: View {
                     }
                 }
 
-                TextField("请输入6位验证码", text: $resetOTP)
+                TextField("auth.otp_placeholder".localized, text: $resetOTP)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.oneTimeCode)
                     .keyboardType(.numberPad)
@@ -700,7 +700,7 @@ struct AuthView: View {
             }
 
             Button(action: handleVerifyResetOTP) {
-                Text("验证")
+                Text("auth.verify".localized)
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -719,7 +719,7 @@ struct AuthView: View {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(LeyhomeTheme.success)
-                Text("验证成功！请设置新密码")
+                Text("auth.verify_success_new_password".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
             }
@@ -729,27 +729,27 @@ struct AuthView: View {
             .cornerRadius(8)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("新密码")
+                Text("auth.new_password".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
 
-                SecureField("请输入新密码（至少6位）", text: $resetPassword)
+                SecureField("auth.new_password_placeholder".localized, text: $resetPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.newPassword)
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("确认密码")
+                Text("auth.confirm_password".localized)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
 
-                SecureField("请再次输入新密码", text: $resetConfirmPassword)
+                SecureField("auth.confirm_new_password_placeholder".localized, text: $resetConfirmPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.newPassword)
             }
 
             if !resetConfirmPassword.isEmpty && resetPassword != resetConfirmPassword {
-                Text("两次输入的密码不一致")
+                Text("auth.password_mismatch".localized)
                     .font(.caption)
                     .foregroundColor(LeyhomeTheme.danger)
             }
@@ -761,7 +761,7 @@ struct AuthView: View {
             }
 
             Button(action: handleResetPassword) {
-                Text("重置密码")
+                Text("auth.reset_password".localized)
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -798,7 +798,7 @@ struct AuthView: View {
     /// 发送注册验证码
     private func handleSendRegisterOTP() {
         guard authManager.isValidEmail(registerEmail) else {
-            authManager.errorMessage = "请输入有效的邮箱地址"
+            authManager.errorMessage = "auth.invalid_email".localized
             return
         }
 
@@ -858,7 +858,7 @@ struct AuthView: View {
 
     /// Apple 登录（占位）
     private func handleAppleLogin() {
-        authManager.errorMessage = "Apple 登录即将开放"
+        authManager.errorMessage = "auth.apple_coming_soon".localized
     }
 
     /// Google 登录

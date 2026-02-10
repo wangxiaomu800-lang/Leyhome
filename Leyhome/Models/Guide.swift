@@ -38,8 +38,9 @@ class Guide: Identifiable {
     /// 关注者数量
     var followerCount: Int = 0
 
-    /// 专长标签（JSON 编码存储）
+    /// 专长标签（JSON 编码存储，双语）
     var tagsData: Data?
+    var tagsEnData: Data?
 
     /// 创建时间
     var createdAt: Date
@@ -68,7 +69,7 @@ class Guide: Identifiable {
         return lang.hasPrefix("zh") ? bioZh : bioEn
     }
 
-    var tags: [String] {
+    var tagsZh: [String] {
         get {
             guard let data = tagsData else { return [] }
             return (try? JSONDecoder().decode([String].self, from: data)) ?? []
@@ -76,6 +77,28 @@ class Guide: Identifiable {
         set {
             tagsData = try? JSONEncoder().encode(newValue)
         }
+    }
+
+    var tagsEn: [String] {
+        get {
+            guard let data = tagsEnData else { return [] }
+            return (try? JSONDecoder().decode([String].self, from: data)) ?? []
+        }
+        set {
+            tagsEnData = try? JSONEncoder().encode(newValue)
+        }
+    }
+
+    /// 根据当前语言返回标签
+    var localizedTags: [String] {
+        let lang = LocalizationManager.shared.currentLanguage
+        return lang.hasPrefix("zh") ? tagsZh : tagsEn
+    }
+
+    /// 兼容旧代码
+    var tags: [String] {
+        get { localizedTags }
+        set { tagsZh = newValue }
     }
 }
 
@@ -91,7 +114,8 @@ extension Guide {
         )
         guide.bioZh = "二十年山野徒步经验，致力于将正念冥想与户外行走相结合。"
         guide.bioEn = "Twenty years of mountain hiking experience, dedicated to combining mindfulness meditation with outdoor walking."
-        guide.tags = ["正念", "徒步", "山野"]
+        guide.tagsZh = ["正念", "徒步", "山野"]
+        guide.tagsEn = ["Mindfulness", "Hiking", "Wilderness"]
         return guide
     }
 }

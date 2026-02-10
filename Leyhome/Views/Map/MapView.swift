@@ -153,10 +153,10 @@ struct MapView: View {
             } message: {
                 Text("recording.stop.confirm.message".localized)
             }
-            .alert("定位权限", isPresented: $showPermissionAlert) {
-                Button("好的", role: .cancel) {}
+            .alert("map.location_permission_title".localized, isPresented: $showPermissionAlert) {
+                Button("button.ok".localized, role: .cancel) {}
             } message: {
-                Text("地脉归途需要访问您的位置来记录轨迹，请前往设置开启定位权限。")
+                Text("map.location_permission_message".localized)
             }
             .sheet(isPresented: $showThemePicker) {
                 ThemePickerView(themeManager: themeManager)
@@ -361,7 +361,7 @@ struct ThemePickerView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("关闭") {
+                    Button("button.close".localized) {
                         dismiss()
                     }
                 }
