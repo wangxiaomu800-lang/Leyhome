@@ -56,6 +56,9 @@ struct LeyhomeApp: App {
                     GIDSignIn.sharedInstance.handle(url)
                 }
                 .environment(\.locale, .init(identifier: languageManager.currentLanguage.languageCode ?? "en"))
+                .task {
+                    SyncManager.shared.configure(modelContainer: sharedModelContainer)
+                }
         }
         .modelContainer(sharedModelContainer)
     }

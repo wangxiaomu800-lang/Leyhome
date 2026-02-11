@@ -189,23 +189,23 @@ class TrackingManager: NSObject, ObservableObject {
             return nil
         }
 
-        // 降低最小点数要求：至少 1 个点即可停止（调试模式）
-        #if DEBUG
-        guard currentTrack.count >= 1 else {
-            print("⚠️ stopTracking: 轨迹点不足（当前: \(currentTrack.count)）")
-            return nil
-        }
-        #else
-        guard currentTrack.count >= 2 else {
-            print("⚠️ stopTracking: 轨迹点不足（当前: \(currentTrack.count)）")
-            return nil
-        }
-        #endif
-
         isTracking = false
         locationManager.stopUpdatingLocation()
         timer?.invalidate()
         timer = nil
+
+        // 轨迹点不足时，仅停止追踪，不创建 Journey
+        guard currentTrack.count >= 1 else {
+            print("⚠️ stopTracking: 轨迹点不足（当前: \(currentTrack.count)），已停止追踪但不创建旅程")
+            self.startTime = nil
+            currentTrack = []
+            totalDistance = 0
+            duration = 0
+            lastLocation = nil
+            lastRecordedLocation = nil
+            lastRecordedTime = nil
+            return nil
+        }
 
         // 创建 Journey 对象
         let journey = Journey(

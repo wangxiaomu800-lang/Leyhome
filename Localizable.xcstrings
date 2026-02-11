@@ -944,7 +944,41 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "登出"
+            "value": "退出登录"
+          }
+        }
+      }
+    },
+    "sign_out.confirm_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign Out"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出登录"
+          }
+        }
+      }
+    },
+    "sign_out.confirm_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to sign out?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确定要退出登录吗？"
           }
         }
       }

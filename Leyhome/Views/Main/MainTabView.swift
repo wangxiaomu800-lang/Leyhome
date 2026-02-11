@@ -42,7 +42,7 @@ struct MainTabView: View {
                 }
                 .tag(3)
 
-            ProfileView()
+            ProfileView(selectedTab: $selectedTab)
                 .tabItem {
                     Image(systemName: "person.crop.circle.fill")
                     Text("tab.profile".localized)

@@ -12,11 +12,18 @@ import Supabase
 import SwiftData
 
 struct ProfileView: View {
+    @Binding var selectedTab: Int
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var languageManager = LanguageManager.shared
     @State private var showSettings = false
-    @State private var showMoodHistory = false
     @State private var showSubscription = false
+    @State private var showMoodHistory = false
+    @State private var showSignOutConfirmation = false
+    @State private var showDeleteConfirmation = false
+    @State private var deleteConfirmText = ""
+    @State private var isDeleting = false
+    @State private var showDeleteError = false
+    @State private var deleteErrorMessage = ""
 
     @Query(sort: \Journey.startTime, order: .reverse) private var allJourneys: [Journey]
     @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
@@ -68,7 +75,12 @@ struct ProfileView: View {
 
                     // 统计卡片
                     HStack(spacing: LeyhomeTheme.Spacing.md) {
-                        ProfileStatCard(title: "profile.stat.tracks".localized, value: "\(journeys.count)", icon: "map")
+                        Button {
+                            selectedTab = 1
+                        } label: {
+                            ProfileStatCard(title: "profile.stat.tracks".localized, value: "\(journeys.count)", icon: "map")
+                        }
+                        .buttonStyle(.plain)
 
                         Button {
                             showMoodHistory = true
@@ -88,26 +100,6 @@ struct ProfileView: View {
                             title: "profile.menu.settings".localized,
                             subtitle: "profile.menu.settings_subtitle".localized,
                             action: { showSettings = true }
-                        )
-
-                        Divider()
-                            .padding(.leading, 60)
-
-                        ProfileMenuItem(
-                            icon: "heart.text.square",
-                            title: "mood.history.title".localized,
-                            subtitle: "mood.history.subtitle".localized,
-                            action: { showMoodHistory = true }
-                        )
-
-                        Divider()
-                            .padding(.leading, 60)
-
-                        ProfileMenuItem(
-                            icon: "clock.arrow.circlepath",
-                            title: "profile.menu.history".localized,
-                            subtitle: "profile.menu.history_subtitle".localized,
-                            action: { /* TODO */ }
                         )
 
                         Divider()
@@ -155,28 +147,54 @@ struct ProfileView: View {
 
                     // 登出按钮
                     Button(action: {
-                        Task {
-                            await authManager.signOut()
-                        }
+                        showSignOutConfirmation = true
                     }) {
                         HStack {
-                            Image(systemName: "arrow.right.square")
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
                             Text("button.sign_out".localized)
                         }
+                        .font(LeyhomeTheme.Fonts.body)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, LeyhomeTheme.Spacing.md)
-                        .background(Color.red.opacity(0.1))
+                        .background(Color.red.opacity(0.12))
                         .foregroundColor(.red)
                         .cornerRadius(LeyhomeTheme.CornerRadius.md)
                     }
                     .padding(.horizontal, LeyhomeTheme.Spacing.lg)
-                    .padding(.top, LeyhomeTheme.Spacing.xl)
+                    .padding(.top, LeyhomeTheme.Spacing.lg)
+
+                    // 删除账户按钮
+                    Button {
+                        deleteConfirmText = ""
+                        showDeleteConfirmation = true
+                    } label: {
+                        HStack {
+                            if isDeleting {
+                                ProgressView()
+                                    .tint(.red.opacity(0.4))
+                            } else {
+                                Image(systemName: "trash")
+                            }
+                            Text("settings.delete_account".localized)
+                        }
+                        .font(LeyhomeTheme.Fonts.body)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, LeyhomeTheme.Spacing.md)
+                        .foregroundColor(.red.opacity(0.4))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: LeyhomeTheme.CornerRadius.md)
+                                .stroke(Color.red.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                    .disabled(isDeleting)
+                    .padding(.horizontal, LeyhomeTheme.Spacing.lg)
+                    .padding(.top, LeyhomeTheme.Spacing.sm)
 
                     // 版本信息
                     Text("Leyhome v1.0.0")
                         .font(LeyhomeTheme.Fonts.caption)
                         .foregroundColor(LeyhomeTheme.primary.opacity(0.5))
-                        .padding(.bottom, LeyhomeTheme.Spacing.xl)
+                        .padding(.vertical, LeyhomeTheme.Spacing.md)
                     }
                 }
             }
@@ -185,14 +203,52 @@ struct ProfileView: View {
                 SettingsView()
                     .environmentObject(authManager)
             }
-            .navigationDestination(isPresented: $showMoodHistory) {
-                MoodHistoryView()
-            }
             .sheet(isPresented: $showSubscription) {
                 SubscriptionView()
             }
+            .navigationDestination(isPresented: $showMoodHistory) {
+                MoodHistoryView()
+            }
+            .alert("sign_out.confirm_title".localized, isPresented: $showSignOutConfirmation) {
+                Button("button.sign_out".localized, role: .destructive) {
+                    Task {
+                        await authManager.signOut()
+                    }
+                }
+                Button("common.cancel".localized, role: .cancel) {}
+            } message: {
+                Text("sign_out.confirm_message".localized)
+            }
+            .alert("settings.delete_confirm_title".localized, isPresented: $showDeleteConfirmation) {
+                TextField("settings.delete_confirm_placeholder".localized, text: $deleteConfirmText)
+                Button("settings.delete_confirm_button".localized, role: .destructive) {
+                    Task {
+                        await performDeleteAccount()
+                    }
+                }
+                .disabled(deleteConfirmText != "settings.delete_confirm_keyword".localized)
+                Button("common.cancel".localized, role: .cancel) {}
+            } message: {
+                Text("settings.delete_confirm_message".localized)
+            }
+            .alert("settings.delete_error_title".localized, isPresented: $showDeleteError) {
+                Button("common.ok".localized, role: .cancel) {}
+            } message: {
+                Text(deleteErrorMessage)
+            }
         }
         .id(languageManager.currentLanguage)
+    }
+
+    private func performDeleteAccount() async {
+        isDeleting = true
+        do {
+            try await authManager.deleteAccount()
+        } catch {
+            deleteErrorMessage = error.localizedDescription
+            showDeleteError = true
+        }
+        isDeleting = false
     }
 }
 
@@ -315,5 +371,5 @@ struct ProfileStatCard: View {
 }
 
 #Preview {
-    ProfileView()
+    ProfileView(selectedTab: .constant(4))
 }

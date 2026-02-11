@@ -15,12 +15,6 @@ struct SettingsView: View {
     @StateObject private var languageManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
-    @State private var showDeleteConfirmation = false
-    @State private var deleteConfirmText = ""
-    @State private var isDeleting = false
-    @State private var showDeleteError = false
-    @State private var deleteErrorMessage = ""
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -134,45 +128,6 @@ struct SettingsView: View {
                             )
                         }
 
-                        // 危险区域
-                        SettingsSection(title: "settings.danger_zone".localized) {
-                            Button {
-                                deleteConfirmText = ""
-                                showDeleteConfirmation = true
-                            } label: {
-                                HStack(spacing: LeyhomeTheme.Spacing.md) {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.red.opacity(0.1))
-                                            .frame(width: 44, height: 44)
-
-                                        if isDeleting {
-                                            ProgressView()
-                                                .tint(.red)
-                                        } else {
-                                            Image(systemName: "trash")
-                                                .font(.system(size: 18))
-                                                .foregroundColor(.red)
-                                        }
-                                    }
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("settings.delete_account".localized)
-                                            .font(LeyhomeTheme.Fonts.body)
-                                            .foregroundColor(.red)
-
-                                        Text("settings.delete_account_subtitle".localized)
-                                            .font(LeyhomeTheme.Fonts.caption)
-                                            .foregroundColor(LeyhomeTheme.textSecondary)
-                                    }
-
-                                    Spacer()
-                                }
-                                .padding(LeyhomeTheme.Spacing.md)
-                            }
-                            .disabled(isDeleting)
-                        }
-
                         // 底部间距
                         Color.clear.frame(height: LeyhomeTheme.Spacing.xl)
                     }
@@ -190,35 +145,7 @@ struct SettingsView: View {
                 }
             }
             .id(languageManager.currentLanguage)
-            .alert("settings.delete_confirm_title".localized, isPresented: $showDeleteConfirmation) {
-                TextField("settings.delete_confirm_placeholder".localized, text: $deleteConfirmText)
-                Button("settings.delete_confirm_button".localized, role: .destructive) {
-                    Task {
-                        await performDeleteAccount()
-                    }
-                }
-                .disabled(deleteConfirmText != "settings.delete_confirm_keyword".localized)
-                Button("common.cancel".localized, role: .cancel) {}
-            } message: {
-                Text("settings.delete_confirm_message".localized)
-            }
-            .alert("settings.delete_error_title".localized, isPresented: $showDeleteError) {
-                Button("common.ok".localized, role: .cancel) {}
-            } message: {
-                Text(deleteErrorMessage)
-            }
         }
-    }
-
-    private func performDeleteAccount() async {
-        isDeleting = true
-        do {
-            try await authManager.deleteAccount()
-        } catch {
-            deleteErrorMessage = error.localizedDescription
-            showDeleteError = true
-        }
-        isDeleting = false
     }
 }
 

@@ -195,6 +195,10 @@ struct NodeCreatorSheet: View {
             print("✅ 心绪节点保存成功: \(moodArray.map { $0.displayName }.joined(separator: ", "))")
             #endif
             onSave?(record.id)
+
+            // 推送 MoodRecord 到云端
+            let savedRecord = record
+            Task { await SyncManager.shared.syncMoodRecord(savedRecord) }
         } catch {
             #if DEBUG
             print("❌ 心绪节点保存失败: \(error.localizedDescription)")

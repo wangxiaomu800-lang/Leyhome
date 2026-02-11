@@ -302,7 +302,7 @@ struct MapView: View {
     private func stopAndSaveTracking() {
         let userID = authManager.currentUser?.id.uuidString ?? ""
         guard let journey = trackingManager.stopTracking(userID: userID) else {
-            print("⚠️ 停止追踪失败：无法创建 Journey 对象")
+            print("ℹ️ 追踪已停止，轨迹点不足未创建旅程")
             return
         }
 
@@ -322,6 +322,10 @@ struct MapView: View {
                 record.journeyID = journeyID
             }
             try modelContext.save()
+
+            // 推送 Journey 到云端
+            let savedJourney = journey
+            Task { await SyncManager.shared.syncJourney(savedJourney) }
         } catch {
             print("❌ Journey 保存失败：\(error.localizedDescription)")
         }

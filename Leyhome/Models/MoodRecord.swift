@@ -110,6 +110,9 @@ class MoodRecord: Identifiable {
     /// 创建时间
     var createdAt: Date
 
+    /// 更新时间
+    var updatedAt: Date = Date(timeIntervalSince1970: 0)
+
     // MARK: - 计算属性
 
     /// 地点坐标
@@ -191,6 +194,7 @@ class MoodRecord: Identifiable {
         self.journeyID = journeyID
         self.locationName = locationName
         self.createdAt = Date()
+        self.updatedAt = Date()
 
         // 存储多心绪
         if let types = moodTypes {

@@ -53,6 +53,9 @@ class Journey {
     /// 创建时间
     var createdAt: Date
 
+    /// 更新时间
+    var updatedAt: Date = Date(timeIntervalSince1970: 0)
+
     // MARK: - 计算属性
 
     /// 起点坐标
@@ -126,6 +129,7 @@ class Journey {
         self.duration = duration
         self.moodRecordIDs = moodRecordIDs
         self.createdAt = Date()
+        self.updatedAt = Date()
     }
 }
 
