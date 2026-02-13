@@ -40,12 +40,12 @@ struct InsightsView: View {
     @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
 
     private var journeys: [Journey] {
-        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
-        return allJourneys.filter { $0.userID == uid }
+        guard let uid = authManager.currentUser?.id.uuidString.lowercased() else { return [] }
+        return allJourneys.filter { $0.userID.lowercased() == uid }
     }
     private var moodRecords: [MoodRecord] {
-        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
-        return allMoodRecords.filter { $0.userID == uid }
+        guard let uid = authManager.currentUser?.id.uuidString.lowercased() else { return [] }
+        return allMoodRecords.filter { $0.userID.lowercased() == uid }
     }
 
     @State private var stats = UserStats()
@@ -55,17 +55,26 @@ struct InsightsView: View {
             LeyhomeTheme.Background.primary
                 .ignoresSafeArea()
 
-            if subscriptionManager.isPremium {
-                // 已订阅：显示完整图表
-                premiumContent
-            } else {
-                // 未订阅：显示锁定状态
-                lockedContent
+            VStack(spacing: LeyhomeTheme.Spacing.lg) {
+                Spacer()
+
+                Image(systemName: "chart.bar.xaxis")
+                    .font(.system(size: 48))
+                    .foregroundColor(LeyhomeTheme.accent)
+
+                Text("insights.title".localized)
+                    .font(LeyhomeTheme.Fonts.title)
+                    .foregroundColor(LeyhomeTheme.primary)
+
+                Text("coming_soon".localized)
+                    .font(LeyhomeTheme.Fonts.body)
+                    .foregroundColor(LeyhomeTheme.textSecondary)
+
+                Spacer()
             }
         }
         .navigationTitle("insights.title".localized)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { computeStats() }
     }
 
     // MARK: - 已订阅内容

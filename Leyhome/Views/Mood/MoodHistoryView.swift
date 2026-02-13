@@ -18,8 +18,8 @@ struct MoodHistoryView: View {
     @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
 
     private var moodRecords: [MoodRecord] {
-        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
-        return allMoodRecords.filter { $0.userID == uid }
+        guard let uid = authManager.currentUser?.id.uuidString.lowercased() else { return [] }
+        return allMoodRecords.filter { $0.userID.lowercased() == uid }
     }
 
     @State private var selectedRecord: MoodRecord?

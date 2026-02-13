@@ -351,7 +351,13 @@ struct JourneyDetailView: View {
     private func renameJourney() {
         guard !newJourneyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         journey.name = newJourneyName.trimmingCharacters(in: .whitespacesAndNewlines)
+        journey.updatedAt = Date()
         try? modelContext.save()
+
+        // 同步到云端
+        Task {
+            await SyncManager.shared.syncJourney(journey)
+        }
     }
 }
 

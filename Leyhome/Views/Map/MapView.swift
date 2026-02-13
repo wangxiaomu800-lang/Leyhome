@@ -28,12 +28,12 @@ struct MapView: View {
     @Query(sort: \MoodRecord.recordTime, order: .reverse) private var allMoodRecords: [MoodRecord]
 
     private var journeys: [Journey] {
-        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
-        return allJourneys.filter { $0.userID == uid }
+        guard let uid = authManager.currentUser?.id.uuidString.lowercased() else { return [] }
+        return allJourneys.filter { $0.userID.lowercased() == uid }
     }
     private var moodRecords: [MoodRecord] {
-        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
-        return allMoodRecords.filter { $0.userID == uid }
+        guard let uid = authManager.currentUser?.id.uuidString.lowercased() else { return [] }
+        return allMoodRecords.filter { $0.userID.lowercased() == uid }
     }
 
     /// 从 SwiftData 查询所有已到访记录

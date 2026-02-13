@@ -43,6 +43,9 @@ Pods/
 .AppleDouble
 .LSOverride
 
+## Assets / 素材
+素材/
+
 ## Temporary files
 *.swp
 *.swo

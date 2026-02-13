@@ -1,4 +1,5 @@
 import SwiftUI
+import AuthenticationServices
 
 /// 认证页面「星图之门」- 深色星空登录体验
 struct AuthView: View {
@@ -208,23 +209,18 @@ struct AuthView: View {
             }
 
             // Apple 登录按钮
-            Button(action: handleAppleLogin) {
-                HStack {
-                    Image(systemName: "apple.logo")
-                        .font(.title3)
-                    Text("login.apple".localized)
-                        .font(.headline)
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color.black)
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                )
+            SignInWithAppleButton(.signIn) { request in
+                request.requestedScopes = [.email]
+            } onCompletion: { result in
+                authManager.handleAppleSignIn(result: result)
             }
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: 50)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
 
             // Google 登录按钮
             Button(action: handleGoogleLogin) {
@@ -854,11 +850,6 @@ struct AuthView: View {
                 resetResetPasswordFlow()
             }
         }
-    }
-
-    /// Apple 登录（占位）
-    private func handleAppleLogin() {
-        authManager.errorMessage = "auth.apple_coming_soon".localized
     }
 
     /// Google 登录

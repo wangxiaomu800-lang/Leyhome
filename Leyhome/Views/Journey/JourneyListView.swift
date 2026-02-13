@@ -17,8 +17,8 @@ struct JourneyListView: View {
     @Query(sort: \Journey.startTime, order: .reverse) private var allJourneys: [Journey]
 
     private var journeys: [Journey] {
-        guard let uid = authManager.currentUser?.id.uuidString else { return [] }
-        return allJourneys.filter { $0.userID == uid }
+        guard let uid = authManager.currentUser?.id.uuidString.lowercased() else { return [] }
+        return allJourneys.filter { $0.userID.lowercased() == uid }
     }
 
     @State private var selectedJourney: Journey?

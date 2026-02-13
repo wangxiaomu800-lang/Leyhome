@@ -8,13 +8,18 @@
 import SwiftUI
 import SwiftData
 import GoogleSignIn
+import Supabase
 
 @main
 struct LeyhomeApp: App {
     @StateObject private var authManager = AuthManager()
     @StateObject private var languageManager = LanguageManager.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // 在 AuthManager 的 .initialSession 事件触发之前配置 SyncManager
+        SyncManager.shared.configure(modelContainer: sharedModelContainer)
+
         #if DEBUG
         // 模拟已订阅状态（测试数据洞察等高级功能）
         SubscriptionManager.debugOverridePremium = true
@@ -56,10 +61,17 @@ struct LeyhomeApp: App {
                     GIDSignIn.sharedInstance.handle(url)
                 }
                 .environment(\.locale, .init(identifier: languageManager.currentLanguage.languageCode ?? "en"))
-                .task {
-                    SyncManager.shared.configure(modelContainer: sharedModelContainer)
-                }
         }
         .modelContainer(sharedModelContainer)
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active, authManager.isAuthenticated,
+               let uid = authManager.currentUser?.id.uuidString {
+                Task {
+                    await SyncManager.shared.pushAll(userID: uid)
+                    await SyncManager.shared.pullAll(userID: uid)
+                    await SyncManager.shared.syncAll()
+                }
+            }
+        }
     }
 }

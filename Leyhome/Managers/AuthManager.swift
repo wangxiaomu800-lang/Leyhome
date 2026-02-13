@@ -61,25 +61,26 @@ class AuthManager: ObservableObject {
     /// 步骤1: 发送注册验证码
     /// - Parameter email: 用户邮箱
     func sendRegisterOTP(email: String) async {
+        let email = email.trimmingCharacters(in: .whitespacesAndNewlines)
         isLoading = true
         errorMessage = nil
         otpSent = false
 
         do {
-            // 先尝试检查用户是否已存在（shouldCreateUser: false）
-            // 如果用户存在，会成功发送 OTP（但这不是我们想要的）
-            try await supabase.auth.signInWithOTP(
-                email: email,
-                shouldCreateUser: false
-            )
+            // 用 RPC 检查邮箱是否已注册（不会触发 OTP）
+            let exists: Bool = try await supabase
+                .rpc("check_email_exists", params: ["check_email": email])
+                .execute()
+                .value
 
-            // 如果执行到这里，说明用户已存在
-            errorMessage = "该邮箱已注册，请前往登录页面"
-            print("❌ 注册失败: 邮箱 \(email) 已被注册")
+            if exists {
+                errorMessage = "auth.error.email_already_registered".localized
+                print("❌ 注册失败: 邮箱 \(email) 已被注册")
+                isLoading = false
+                return
+            }
 
-        } catch {
-            // 如果失败，说明用户不存在，可以注册
-            // 尝试发送注册 OTP（shouldCreateUser: true）
+            // 邮箱未注册，发送注册 OTP
             print("ℹ️ 用户不存在，准备发送注册验证码")
 
             do {
@@ -92,10 +93,22 @@ class AuthManager: ObservableObject {
                 errorMessage = nil
                 print("✅ 注册验证码已发送到: \(email)")
 
-            } catch let createError {
-                errorMessage = "发送验证码失败: \(createError.localizedDescription)"
-                print("❌ 发送注册验证码失败: \(createError)")
+            } catch let otpError {
+                // rate limit 错误说明验证码已由前次请求发送，视为成功
+                let desc = "\(otpError)"
+                if desc.contains("rate") || desc.contains("429") {
+                    otpSent = true
+                    errorMessage = nil
+                    print("⚠️ 触发 rate limit，但验证码已发送: \(email)")
+                } else {
+                    errorMessage = "auth.error.send_otp_failed".localized
+                    print("❌ 发送注册验证码失败: \(otpError)")
+                }
             }
+
+        } catch {
+            errorMessage = "auth.error.send_otp_failed".localized
+            print("❌ RPC 检查邮箱失败: \(error)")
         }
 
         isLoading = false
@@ -107,6 +120,7 @@ class AuthManager: ObservableObject {
     ///   - code: 验证码
     /// ⚠️ 注意: 验证成功后用户已登录，但需要设置密码才能完成注册
     func verifyRegisterOTP(email: String, code: String) async {
+        let email = email.trimmingCharacters(in: .whitespacesAndNewlines)
         isLoading = true
         errorMessage = nil
 
@@ -154,6 +168,14 @@ class AuthManager: ObservableObject {
 
             print("✅ 注册完成: \(user.email ?? "Unknown")")
 
+            // 触发云同步（注册流程不经过 .signedIn 事件的同步逻辑）
+            let uid = user.id.uuidString
+            Task {
+                await SyncManager.shared.pullAll(userID: uid)
+                await SyncManager.shared.pushAll(userID: uid)
+                await SyncManager.shared.syncAll()
+            }
+
         } catch {
             errorMessage = "设置密码失败: \(error.localizedDescription)"
             print("❌ 完成注册失败: \(error)")
@@ -169,25 +191,50 @@ class AuthManager: ObservableObject {
     ///   - email: 用户邮箱
     ///   - password: 用户密码
     func signIn(email: String, password: String) async {
+        let email = email.trimmingCharacters(in: .whitespacesAndNewlines)
         isLoading = true
         errorMessage = nil
 
+        // 步骤1: RPC 检查邮箱是否已注册
+        let exists: Bool
         do {
-            // 使用邮箱和密码登录
+            exists = try await supabase
+                .rpc("check_email_exists", params: ["check_email": email])
+                .execute()
+                .value
+        } catch {
+            // RPC 失败时直接尝试登录（降级处理）
+            print("⚠️ RPC 检查失败，降级为直接登录: \(error)")
+            await signInDirectly(email: email, password: password)
+            return
+        }
+
+        guard exists else {
+            errorMessage = "auth.error.email_not_registered".localized
+            print("❌ 登录失败: 邮箱 \(email) 未注册")
+            isLoading = false
+            return
+        }
+
+        // 步骤2: 邮箱已注册，尝试密码登录
+        await signInDirectly(email: email, password: password)
+    }
+
+    /// 直接执行密码登录（供 signIn 调用）
+    private func signInDirectly(email: String, password: String) async {
+        do {
             let response = try await supabase.auth.signIn(
                 email: email,
                 password: password
             )
 
-            // 登录成功
             currentUser = response.user
             isAuthenticated = true
             needsPasswordSetup = false
-
             print("✅ 登录成功: \(response.user.email ?? "Unknown")")
 
         } catch {
-            errorMessage = "登录失败: 邮箱或密码错误"
+            errorMessage = "auth.error.wrong_password".localized
             print("❌ 登录失败: \(error)")
         }
 
@@ -199,6 +246,7 @@ class AuthManager: ObservableObject {
     /// 步骤1: 发送密码重置验证码
     /// - Parameter email: 用户邮箱
     func sendResetOTP(email: String) async {
+        let email = email.trimmingCharacters(in: .whitespacesAndNewlines)
         isLoading = true
         errorMessage = nil
         otpSent = false
@@ -225,6 +273,7 @@ class AuthManager: ObservableObject {
     ///   - code: 验证码
     /// ⚠️ 注意: type 必须是 .recovery（不是 .email）
     func verifyResetOTP(email: String, code: String) async {
+        let email = email.trimmingCharacters(in: .whitespacesAndNewlines)
         await MainActor.run {
             isLoading = true
             errorMessage = nil
@@ -286,6 +335,14 @@ class AuthManager: ObservableObject {
 
             print("✅ 密码重置成功: \(user.email ?? "Unknown")")
 
+            // 触发云同步（密码重置流程不经过 .signedIn 事件的同步逻辑）
+            let uid = user.id.uuidString
+            Task {
+                await SyncManager.shared.pullAll(userID: uid)
+                await SyncManager.shared.pushAll(userID: uid)
+                await SyncManager.shared.syncAll()
+            }
+
         } catch {
             errorMessage = "重置密码失败: \(error.localizedDescription)"
             print("❌ 重置密码失败: \(error)")
@@ -294,24 +351,7 @@ class AuthManager: ObservableObject {
         isLoading = false
     }
 
-    // MARK: - 第三方登录（预留）
-
-    /// 使用 Apple 登录
-    /// TODO: 实现 Sign in with Apple
-    func signInWithApple() async {
-        isLoading = true
-        errorMessage = nil
-
-        // TODO: 实现 Apple 登录逻辑
-        // 1. 使用 AuthenticationServices 获取 Apple 凭证
-        // 2. 调用 supabase.auth.signInWithIdToken(provider: .apple, idToken:)
-        // 3. 更新 currentUser 和 isAuthenticated
-
-        errorMessage = "Apple 登录功能开发中..."
-        print("⚠️ TODO: 实现 Apple 登录")
-
-        isLoading = false
-    }
+    // MARK: - 第三方登录
 
     /// 使用 Google 登录
     func signInWithGoogle() async {
@@ -428,6 +468,9 @@ class AuthManager: ObservableObject {
                 // 重置引导页状态，确保新用户能看到引导
                 UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
             }
+
+            // 清除本地 SwiftData 数据和离线队列
+            SyncManager.shared.clearLocalData()
 
             print("✅ 退出登录成功")
             print("📱 已清除本地会话状态")
@@ -663,6 +706,14 @@ class AuthManager: ObservableObject {
             // 删除成功
             print("✅ 账户删除成功")
 
+            // 清除本地 session（防止残留 token）
+            try? await supabase.auth.signOut(scope: .local)
+
+            // 清除本地 SwiftData 数据和离线队列
+            await MainActor.run {
+                SyncManager.shared.clearLocalData()
+            }
+
             // 清空本地状态
             await MainActor.run {
                 currentUser = nil
@@ -727,10 +778,21 @@ class AuthManager: ObservableObject {
                     isLoading = false
                 }
 
+            } catch let error as ASAuthorizationError where error.code == .canceled {
+                // 用户取消登录，不显示错误
+                print("⚠️ 用户取消了 Apple 登录")
+                await MainActor.run {
+                    isLoading = false
+                }
             } catch {
                 print("❌ Apple Sign In 失败: \(error)")
+                let desc = "\(error)"
                 await MainActor.run {
-                    errorMessage = error.localizedDescription
+                    if desc.contains("provider_disabled") || desc.contains("not enabled") {
+                        errorMessage = "Apple 登录未启用，请联系开发者"
+                    } else {
+                        errorMessage = "Apple 登录失败，请重试"
+                    }
                     isLoading = false
                 }
             }

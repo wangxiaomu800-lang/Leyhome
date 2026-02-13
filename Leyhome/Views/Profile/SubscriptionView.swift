@@ -21,36 +21,31 @@ struct SubscriptionView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // 背景渐变
-                LinearGradient(
-                    colors: [
-                        LeyhomeTheme.primary.opacity(0.05),
-                        LeyhomeTheme.Background.primary
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                LeyhomeTheme.Background.primary
+                    .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: LeyhomeTheme.Spacing.lg) {
-                        // 标题区
-                        headerSection
+                VStack(spacing: LeyhomeTheme.Spacing.lg) {
+                    Spacer()
 
-                        // 权益列表
-                        benefitsSection
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 48))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [LeyhomeTheme.accent, LeyhomeTheme.primary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
 
-                        // 产品卡片
-                        productsSection
+                    Text("subscription.title".localized)
+                        .font(LeyhomeTheme.Fonts.title)
+                        .foregroundColor(LeyhomeTheme.primary)
 
-                        // 操作按钮
-                        actionSection
+                    Text("coming_soon".localized)
+                        .font(LeyhomeTheme.Fonts.body)
+                        .foregroundColor(LeyhomeTheme.textSecondary)
 
-                        // 条款链接
-                        legalSection
-                    }
-                    .padding(.horizontal, LeyhomeTheme.Spacing.lg)
-                    .padding(.bottom, LeyhomeTheme.Spacing.xxl)
+                    Spacer()
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -63,11 +58,6 @@ struct SubscriptionView: View {
                             .foregroundColor(LeyhomeTheme.textMuted)
                     }
                 }
-            }
-            .alert("subscription.error".localized, isPresented: $showError) {
-                Button("button.ok".localized, role: .cancel) {}
-            } message: {
-                Text(errorText)
             }
         }
     }
@@ -123,13 +113,31 @@ struct SubscriptionView: View {
 
     private var productsSection: some View {
         VStack(spacing: LeyhomeTheme.Spacing.md) {
-            if subscriptionManager.products.isEmpty {
-                // 加载中或无产品
+            if subscriptionManager.isLoading {
+                // 正在加载
                 VStack(spacing: LeyhomeTheme.Spacing.sm) {
                     ProgressView()
                     Text("subscription.loading".localized)
                         .font(LeyhomeTheme.Fonts.caption)
                         .foregroundColor(LeyhomeTheme.textMuted)
+                }
+                .padding(LeyhomeTheme.Spacing.xl)
+            } else if subscriptionManager.products.isEmpty {
+                // 加载失败或无产品
+                VStack(spacing: LeyhomeTheme.Spacing.sm) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 28))
+                        .foregroundColor(LeyhomeTheme.textMuted)
+                    Text("subscription.load_failed".localized)
+                        .font(LeyhomeTheme.Fonts.caption)
+                        .foregroundColor(LeyhomeTheme.textMuted)
+                    Button {
+                        Task { await subscriptionManager.loadProducts() }
+                    } label: {
+                        Text("subscription.retry".localized)
+                            .font(LeyhomeTheme.Fonts.caption)
+                            .foregroundColor(LeyhomeTheme.accent)
+                    }
                 }
                 .padding(LeyhomeTheme.Spacing.xl)
             } else {

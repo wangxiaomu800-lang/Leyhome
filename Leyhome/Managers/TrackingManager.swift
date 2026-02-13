@@ -210,7 +210,7 @@ class TrackingManager: NSObject, ObservableObject {
         // 创建 Journey 对象
         let journey = Journey(
             userID: userID,
-            name: "Journey_\(Date().formatted())",
+            name: "\("journey.default_name".localized)_\(Date().formatted())",
             startTime: startTime,
             endTime: Date(),
             transportMode: currentTransportMode,

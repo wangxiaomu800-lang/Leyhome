@@ -272,7 +272,7 @@ class SyncManager: ObservableObject {
     private func buildJourneyPayload(_ journey: Journey) -> [String: AnyJSON] {
         var payload: [String: AnyJSON] = [
             "id": .string(journey.id.uuidString),
-            "user_id": .string(journey.userID),
+            "user_id": .string(journey.userID.lowercased()),
             "name": .string(journey.name),
             "start_time": .string(isoFormatter.string(from: journey.startTime)),
             "end_time": journey.endTime.map { .string(isoFormatter.string(from: $0)) } ?? .null,
@@ -368,7 +368,7 @@ class SyncManager: ObservableObject {
     private func buildMoodRecordPayload(_ record: MoodRecord) -> [String: AnyJSON] {
         var payload: [String: AnyJSON] = [
             "id": .string(record.id.uuidString),
-            "user_id": .string(record.userID),
+            "user_id": .string(record.userID.lowercased()),
             "mood_type": .string(record.moodType.rawValue),
             "mood_types": .array(record.moodTypes.map { .string($0.rawValue) }),
             "intensity": .integer(record.intensity),
@@ -422,7 +422,7 @@ class SyncManager: ObservableObject {
             return
         }
 
-        let context = ModelContext(container)
+        let context = container.mainContext
         await pullJourneys(userID: userID, context: context)
         await pullMoodRecords(userID: userID, context: context)
 
@@ -436,9 +436,6 @@ class SyncManager: ObservableObject {
 
     private func pullJourneys(userID: String, context: ModelContext) async {
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
             let remotes: [RemoteJourney] = try await supabase
                 .from("journeys")
                 .select()
@@ -472,9 +469,6 @@ class SyncManager: ObservableObject {
 
     private func pullMoodRecords(userID: String, context: ModelContext) async {
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
             let remotes: [RemoteMoodRecord] = try await supabase
                 .from("mood_records")
                 .select()
@@ -514,13 +508,13 @@ class SyncManager: ObservableObject {
             return
         }
 
-        let context = ModelContext(container)
+        let context = container.mainContext
 
         // 推送所有 Journey
         do {
             let descriptor = FetchDescriptor<Journey>()
             let journeys = (try? context.fetch(descriptor)) ?? []
-            let userJourneys = journeys.filter { $0.userID == userID }
+            let userJourneys = journeys.filter { $0.userID.lowercased() == userID.lowercased() }
             for journey in userJourneys {
                 await syncJourney(journey)
             }
@@ -531,7 +525,7 @@ class SyncManager: ObservableObject {
         do {
             let descriptor = FetchDescriptor<MoodRecord>()
             let records = (try? context.fetch(descriptor)) ?? []
-            let userRecords = records.filter { $0.userID == userID }
+            let userRecords = records.filter { $0.userID.lowercased() == userID.lowercased() }
             for record in userRecords {
                 await syncMoodRecord(record)
             }
@@ -542,6 +536,7 @@ class SyncManager: ObservableObject {
     // MARK: - Remote → Local 转换辅助
 
     private func applyRemoteJourney(_ remote: RemoteJourney, to local: Journey) {
+        local.userID = remote.userId
         local.name = remote.name
         local.startTime = remote.startTime
         local.endTime = remote.endTime
@@ -590,6 +585,7 @@ class SyncManager: ObservableObject {
     }
 
     private func applyRemoteMoodRecord(_ remote: RemoteMoodRecord, to local: MoodRecord) {
+        local.userID = remote.userId
         local.moodType = MoodType(rawValue: remote.moodType) ?? .calm
         if let types = remote.moodTypes {
             local.moodTypes = types.compactMap { MoodType(rawValue: $0) }
@@ -738,6 +734,29 @@ class SyncManager: ObservableObject {
             print("[SyncManager] Fetch sacred sites failed: \(error)")
             return []
         }
+    }
+
+    // MARK: - 清理本地数据
+
+    /// 清除所有本地 Journey / MoodRecord 并清空离线队列
+    func clearLocalData() {
+        guard let container = modelContainer else {
+            print("[SyncManager] clearLocalData skipped: modelContainer not configured")
+            return
+        }
+        let context = container.mainContext
+
+        do {
+            try context.delete(model: Journey.self)
+            try context.delete(model: MoodRecord.self)
+            try context.save()
+            print("[SyncManager] clearLocalData: deleted all local Journey & MoodRecord")
+        } catch {
+            print("[SyncManager] clearLocalData failed: \(error)")
+        }
+
+        // 清空离线队列
+        pendingChanges = []
     }
 
     // MARK: - Cleanup
