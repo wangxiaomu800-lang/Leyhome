@@ -2,9 +2,10 @@
 //  IntentionSheet.swift
 //  Leyhome - 地脉归途
 //
-//  意向选择 Sheet - 用户标记「我亦向往」时选择计划到达的年月
+//  意向选择 Sheet - 标记「我亦向往」/ 修改计划日期 / 取消向往
 //
 //  Created on 2026/02/03.
+//  Updated on 2026/02/14: 每用户每圣迹唯一意向，支持修改与取消
 //
 
 import SwiftUI
@@ -21,21 +22,20 @@ struct IntentionSheet: View {
 
     @State private var selectedYear: Int
     @State private var selectedMonth: Int
-    @State private var hasMarked = false
-    @State private var intentionCount: Int = 0
+    @State private var isSaved = false
+    @State private var isUpdateMode = false     // 当前用户已有意向记录
+    @State private var isLoading = true
     @State private var sameMonthCount: Int = 0
+    @State private var showCancelConfirm = false
 
     private let currentYear = Calendar.current.component(.year, from: Date())
     private let currentMonth = Calendar.current.component(.month, from: Date())
 
     init(site: SacredSite) {
         self.site = site
-        // Default to next month or current month
         let now = Date()
         let year = Calendar.current.component(.year, from: now)
         let month = Calendar.current.component(.month, from: now)
-
-        // If current month, default to next month
         if month == 12 {
             _selectedYear = State(initialValue: year + 1)
             _selectedMonth = State(initialValue: 1)
@@ -49,14 +49,22 @@ struct IntentionSheet: View {
         NavigationStack {
             VStack(spacing: LeyhomeTheme.Spacing.lg) {
                 siteInfoCard
-                dateSelectionSection
-                statsSection
-                confirmButton
+                if isLoading {
+                    ProgressView()
+                        .padding()
+                } else {
+                    dateSelectionSection
+                    statsSection
+                    confirmButton
+                    if isUpdateMode {
+                        cancelButton
+                    }
+                }
                 Spacer()
             }
             .padding(LeyhomeTheme.Spacing.md)
             .background(LeyhomeTheme.Background.primary)
-            .navigationTitle("intention.title".localized)
+            .navigationTitle(isUpdateMode ? "intention.update_title".localized : "intention.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -67,13 +75,19 @@ struct IntentionSheet: View {
             }
         }
         .onAppear {
-            loadIntentionStats()
+            Task { await loadUserIntention() }
         }
-        .onChange(of: selectedYear) { _, _ in
-            updateSameMonthCount()
-        }
-        .onChange(of: selectedMonth) { _, _ in
-            updateSameMonthCount()
+        .onChange(of: selectedYear) { _, _ in updateSameMonthCount() }
+        .onChange(of: selectedMonth) { _, _ in updateSameMonthCount() }
+        .confirmationDialog(
+            "intention.cancel_confirm".localized,
+            isPresented: $showCancelConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("intention.cancel_aspire".localized, role: .destructive) {
+                cancelAspiration()
+            }
+            Button("button.cancel".localized, role: .cancel) {}
         }
     }
 
@@ -81,7 +95,6 @@ struct IntentionSheet: View {
 
     private var siteInfoCard: some View {
         HStack(spacing: LeyhomeTheme.Spacing.md) {
-            // Site image placeholder
             RoundedRectangle(cornerRadius: LeyhomeTheme.CornerRadius.sm)
                 .fill(
                     LinearGradient(
@@ -135,7 +148,6 @@ struct IntentionSheet: View {
                 .foregroundColor(LeyhomeTheme.textPrimary)
 
             HStack(spacing: LeyhomeTheme.Spacing.md) {
-                // Year picker
                 VStack(alignment: .leading, spacing: 4) {
                     Text("intention.year".localized)
                         .font(LeyhomeTheme.Fonts.caption)
@@ -155,7 +167,6 @@ struct IntentionSheet: View {
                 .background(Color(.systemBackground))
                 .cornerRadius(LeyhomeTheme.CornerRadius.sm)
 
-                // Month picker
                 VStack(alignment: .leading, spacing: 4) {
                     Text("intention.month".localized)
                         .font(LeyhomeTheme.Fonts.caption)
@@ -182,13 +193,15 @@ struct IntentionSheet: View {
 
     private var statsSection: some View {
         VStack(spacing: LeyhomeTheme.Spacing.sm) {
-            if sameMonthCount > 0 || hasMarked {
-                let displayCount = hasMarked ? sameMonthCount + 1 : sameMonthCount
-                let dateString = formattedSelectedDate
-
-                Text("intention.count".localized(with: displayCount, dateString))
+            if sameMonthCount > 0 {
+                Text("intention.count".localized(with: sameMonthCount, formattedSelectedDate))
                     .font(LeyhomeTheme.Fonts.bodySmall)
                     .foregroundColor(LeyhomeTheme.textSecondary)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text("intention.none".localized)
+                    .font(LeyhomeTheme.Fonts.bodySmall)
+                    .foregroundColor(LeyhomeTheme.textMuted)
                     .multilineTextAlignment(.center)
             }
         }
@@ -199,23 +212,34 @@ struct IntentionSheet: View {
 
     private var confirmButton: some View {
         Button {
-            markIntention()
+            saveIntention()
         } label: {
             HStack {
-                Image(systemName: hasMarked ? "checkmark.circle.fill" : "heart.fill")
-                Text(hasMarked ? "intention.marked".localized : "button.confirm".localized)
+                Image(systemName: isSaved ? "checkmark.circle.fill" : "heart.fill")
+                Text(isSaved ? "intention.marked".localized : (isUpdateMode ? "intention.update".localized : "button.confirm".localized))
             }
             .leyhomePrimaryButton()
             .frame(maxWidth: .infinity)
         }
-        .disabled(hasMarked)
+        .disabled(isSaved)
+    }
+
+    // MARK: - Cancel Aspiration Button
+
+    private var cancelButton: some View {
+        Button {
+            showCancelConfirm = true
+        } label: {
+            Text("intention.cancel_aspire".localized)
+                .font(LeyhomeTheme.Fonts.bodySmall)
+                .foregroundColor(LeyhomeTheme.textMuted)
+        }
     }
 
     // MARK: - Helpers
 
     private var validMonths: [Int] {
         if selectedYear == currentYear {
-            // Only show current month onwards for current year
             return Array(currentMonth...12)
         }
         return Array(1...12)
@@ -224,7 +248,6 @@ struct IntentionSheet: View {
     private func monthName(_ month: Int) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM"
-        // 根据 App 语言设置 locale，而非系统 locale
         let lang = LocalizationManager.shared.currentLanguage
         formatter.locale = Locale(identifier: lang.hasPrefix("zh") ? "zh-Hans" : "en")
         var components = DateComponents()
@@ -246,52 +269,129 @@ struct IntentionSheet: View {
 
     // MARK: - Data Operations
 
-    private func loadIntentionStats() {
-        // TODO: Load from SwiftData or Supabase
-        // For now, use site's intentionCount
-        intentionCount = site.intentionCount
-        sameMonthCount = 0
-    }
-
-    private func updateSameMonthCount() {
-        // TODO: Query actual count for selected month
-        // For now, simulate
-        sameMonthCount = Int.random(in: 0...20)
-    }
-
-    private func markIntention() {
-        guard let userId = authManager.currentUser?.id.uuidString else {
-            // Handle not logged in
+    /// 加载当前用户对该圣迹的已有意向（判断是新增还是修改模式）
+    private func loadUserIntention() async {
+        guard let userId = authManager.currentUser?.id else {
+            await MainActor.run { isLoading = false }
             return
         }
 
-        // Create intention record
-        let intention = Intention(
-            siteId: site.id,
-            userId: userId,
-            targetYear: selectedYear,
-            targetMonth: selectedMonth
-        )
+        struct RemoteIntention: Decodable {
+            let targetYear: Int
+            let targetMonth: Int
+            enum CodingKeys: String, CodingKey {
+                case targetYear = "target_year"
+                case targetMonth = "target_month"
+            }
+        }
 
-        modelContext.insert(intention)
+        do {
+            let existing: [RemoteIntention] = try await SupabaseConfig.shared
+                .from("intentions")
+                .select("target_year, target_month")
+                .eq("user_id", value: userId.uuidString.lowercased())
+                .eq("site_name_en", value: site.nameEn)
+                .execute()
+                .value
 
-        // Update site's intention count
-        site.intentionCount += 1
-        site.updatedAt = Date()
+            await MainActor.run {
+                if let record = existing.first {
+                    isUpdateMode = true
+                    selectedYear = record.targetYear
+                    selectedMonth = record.targetMonth
+                }
+                isLoading = false
+            }
+            updateSameMonthCount()
+        } catch {
+            print("[IntentionSheet] loadUserIntention failed: \(error)")
+            await MainActor.run { isLoading = false }
+        }
+    }
 
-        // Mark as aspired via AspiredSitesManager
+    private func updateSameMonthCount() {
+        Task {
+            do {
+                let result = try await SupabaseConfig.shared
+                    .from("intentions")
+                    .select("id", head: false, count: .exact)
+                    .eq("site_name_en", value: site.nameEn)
+                    .eq("target_year", value: selectedYear)
+                    .eq("target_month", value: selectedMonth)
+                    .execute()
+                let count = result.count ?? 0
+                await MainActor.run { sameMonthCount = count }
+            } catch {
+                print("[IntentionSheet] updateSameMonthCount failed: \(error)")
+            }
+        }
+    }
+
+    /// 新增或更新意向（upsert）
+    private func saveIntention() {
+        guard let userId = authManager.currentUser?.id else { return }
+
+        // 本地状态
         if !aspiredManager.isAspired(site) {
             aspiredManager.toggleAspire(site)
         }
+        if !isUpdateMode {
+            site.intentionCount += 1
+            site.updatedAt = Date()
+            try? modelContext.save()
+        }
+        isSaved = true
 
-        try? modelContext.save()
+        Task {
+            do {
+                let payload: [String: AnyJSON] = [
+                    "user_id": .string(userId.uuidString.lowercased()),
+                    "site_name_en": .string(site.nameEn),
+                    "target_year": .integer(selectedYear),
+                    "target_month": .integer(selectedMonth)
+                ]
+                try await SupabaseConfig.shared
+                    .from("intentions")
+                    .upsert(payload, onConflict: "user_id,site_name_en")
+                    .execute()
+                print("[IntentionSheet] Intention upserted to Supabase")
+            } catch {
+                print("[IntentionSheet] Supabase upsert failed: \(error)")
+            }
+        }
 
-        hasMarked = true
-
-        // Dismiss after a short delay to show the "marked" state
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             dismiss()
         }
+    }
+
+    /// 取消向往（删除记录）
+    private func cancelAspiration() {
+        guard let userId = authManager.currentUser?.id else { return }
+
+        // 更新本地状态
+        if aspiredManager.isAspired(site) {
+            aspiredManager.toggleAspire(site)
+        }
+        site.intentionCount = max(0, site.intentionCount - 1)
+        site.updatedAt = Date()
+        try? modelContext.save()
+
+        Task {
+            do {
+                try await SupabaseConfig.shared
+                    .from("intentions")
+                    .delete()
+                    .eq("user_id", value: userId.uuidString.lowercased())
+                    .eq("site_name_en", value: site.nameEn)
+                    .execute()
+                print("[IntentionSheet] Intention deleted from Supabase")
+            } catch {
+                print("[IntentionSheet] Supabase delete failed: \(error)")
+            }
+        }
+
+        dismiss()
     }
 }
 

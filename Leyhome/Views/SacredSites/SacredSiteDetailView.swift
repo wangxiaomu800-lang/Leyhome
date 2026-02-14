@@ -10,6 +10,7 @@
 //
 
 import SwiftUI
+import Supabase
 
 struct SacredSiteDetailView: View {
     let site: SacredSite
@@ -57,9 +58,30 @@ struct SacredSiteDetailView: View {
             .sheet(isPresented: $showJourneyPlanner) {
                 JourneyPlannerView(site: site)
             }
-            .sheet(isPresented: $showIntentionSheet) {
+            .sheet(isPresented: $showIntentionSheet, onDismiss: {
+                Task { await fetchIntentionCount() }
+            }) {
                 IntentionSheet(site: site)
             }
+            .onAppear {
+                Task { await fetchIntentionCount() }
+            }
+        }
+    }
+
+    private func fetchIntentionCount() async {
+        do {
+            let result = try await SupabaseConfig.shared
+                .from("intentions")
+                .select("id", head: false, count: .exact)
+                .eq("site_name_en", value: site.nameEn)
+                .execute()
+            let total = result.count ?? 0
+            await MainActor.run {
+                site.intentionCount = total
+            }
+        } catch {
+            print("[SacredSiteDetailView] fetchIntentionCount failed: \(error)")
         }
     }
 
@@ -201,17 +223,9 @@ struct SacredSiteDetailView: View {
                 .frame(maxWidth: .infinity)
             }
 
-            // Aspire button - opens IntentionSheet or removes aspiration
+            // Aspire button - always opens IntentionSheet (new or update mode)
             Button {
-                if aspiredManager.isAspired(site) {
-                    // Already aspired: directly toggle off
-                    aspiredManager.toggleAspire(site)
-                    site.intentionCount = max(0, site.intentionCount - 1)
-                    site.updatedAt = Date()
-                } else {
-                    // Not aspired: show IntentionSheet
-                    showIntentionSheet = true
-                }
+                showIntentionSheet = true
             } label: {
                 HStack {
                     Image(systemName: aspiredManager.isAspired(site) ? "heart.fill" : "heart")
